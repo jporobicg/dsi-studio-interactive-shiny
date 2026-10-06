@@ -59,8 +59,9 @@ mod_explore_server <- function(id, app_state) {
         w <- all_w[all_w$group_key == g & all_w$valid %in% TRUE & is.finite(all_w$dsi_v2), ]
         w <- w[order(w$start_year), ]
         if (nrow(w) < 2) return(NULL)
-        HTML(sub("<svg ", "<svg class=\"spark\" preserveAspectRatio=\"none\" viewBox=\"0 0 120 28\" ",
-                 create_sparkline_svg(w$dsi_v2, 120, 28, "#555")))
+        svg <- create_sparkline_svg(w$dsi_v2, 120, 28, "#555")
+        svg <- sub(' style="[^"]*"', "", svg)  # inline display style would override the responsive CSS
+        HTML(sub("<svg ", "<svg class=\"spark\" preserveAspectRatio=\"none\" viewBox=\"0 0 120 28\" ", svg))
       }
       click_js <- function(g) sprintf("Shiny.setInputValue('%s', %s, {priority: 'event'});", ns("cell_click"),
                                       jsonlite::toJSON(g, auto_unbox = TRUE))
@@ -383,8 +384,9 @@ mod_explore_server <- function(id, app_state) {
                     label = list(formatter = sprintf("observed %.1f", r$observed_dsi_v2), color = "#D55E00")) |>
         e_x_axis(name = "DSI_v2 with randomised catch", nameLocation = "middle", nameGap = 28,
                  axisLabel = list(interval = 7)) |>
-        e_y_axis(name = "runs") |> e_legend(show = FALSE) |> e_tooltip(trigger = "axis") |>
-        e_grid(left = 44, right = 20, top = 30, bottom = 50) |> e_animation(FALSE)
+        e_y_axis(name = "runs", nameLocation = "middle", nameGap = 34, nameRotate = 90, minInterval = 1) |>
+        e_legend(show = FALSE) |> e_tooltip(trigger = "axis") |>
+        e_grid(left = 56, right = 44, top = 34, bottom = 50) |> e_animation(FALSE)
     })
   })
 }

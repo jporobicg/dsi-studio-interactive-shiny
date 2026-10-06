@@ -334,7 +334,7 @@ dsi_custom_css <- function() {
       .dsi-matrix { gap: 3px; }
       .mx-head, .mx-row-label { font-size: 10px; padding: 4px 1px; }
       .mx-cell { padding: 6px 1px; border-width: 1.5px; }
-      .mx-cell .mx-band, .mx-cell .spark { display: none; }
+      .mx-cell .mx-band, .mx-cell .spark, .mx-cell svg { display: none !important; }
       .mx-score { font-size: 13px; }
       .dsi-grid-2, .dsi-grid-3 { grid-template-columns: minmax(0, 1fr); gap: 16px; }
       .decide-row { grid-template-columns: minmax(0, 1fr); }
