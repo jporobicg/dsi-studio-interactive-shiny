@@ -1,0 +1,444 @@
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+## ~ DSI Core: window metrics computation ~ ##
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+
+#' Default reference values for DSI computation
+#' 
+#' @return List of reference parameters
+#' @export
+default_dsi_refs <- function() {
+  list(
+    beta_ref_base = 0.02,
+    p_ref = 0.20,
+    ec_ref = 1.0,
+    ic_ref = 2.0,
+    n_min_score = 8,
+    n_full_score = 12,
+    outlier_threshold = 2.0,
+    outlier_cap = 0.20,
+    cov_min = 0.5,
+    ess_min = 6,
+    ess_full = 14,
+    cook_threshold_mult = 4,
+    leverage_threshold_mult = 4,
+    cook_lev_cap = 0.20,
+    acf_threshold = 0.6,
+    z_shift_threshold = 2.5,
+    fit_e_threshold = 0.7,
+    stab_threshold = 0.3,
+    p_miss_cov_lo = 0.7,
+    p_miss_cov_hi = 1.0,
+    p_miss_ess_lo = 0.85,
+    p_miss_ess_hi = 1.0,
+    psi_ref = 4.0,
+    ks_p_ref = 0.05,
+    psi_n_bins = 10,
+    psi_eps = 0.005
+  )
+}
+
+#' Compute per-window metrics (CORRECTED VERSION)
+#' 
+#' Calculates all DSI metrics for a single time window, with bug fixes:
+#' - Proper year-based sorting for ACF
+#' - Coverage based on calendar years not just present rows
+#' - Correct effort handling
+#' 
+#' @param df Data frame for one group
+#' @param start_year Window start year
+#' @param end_year Window end year
+#' @param min_n Minimum window length
+#' @param min_usable Minimum usable observations
+#' @param refs Reference parameters (from default_dsi_refs)
+#' @param cols Column name list
+#' @return Named list of metrics and validity info
+#' @export
+compute_window_metrics_corrected <- function(df, start_year, end_year,
+                                            min_n = 8, min_usable = 6,
+                                            refs = default_dsi_refs(),
+                                            cols = list(year = "year", catch = "catch",
+                                                       effort = "effort", cpue = "cpue")) {
+  
+  in_window <- .year_in_window(df[[cols$year]], start_year, end_year)
+  d <- df[in_window, ]
+  
+  calendar_length <- end_year - start_year + 1L
+  n_rows <- nrow(d)
+  
+  result <- list(
+    start_year = start_year,
+    end_year = end_year,
+    n_years = calendar_length,
+    n_rows = n_rows,
+    valid = TRUE,
+    reasons_invalid = NA_character_
+  )
+  
+  if (n_rows == 0) {
+    result$valid <- FALSE
+    result$reasons_invalid <- "no_rows_in_window"
+    return(result)
+  }
+  
+  d <- d[order(d[[cols$year]]), ]
+  
+  cpue_vec <- d[[cols$cpue]]
+  effort_vec <- d[[cols$effort]]
+  catch_vec <- d[[cols$catch]]
+  year_vec <- d[[cols$year]]
+  
+  log_result <- safe_log_cpue(cpue_vec)
+  log_cpue <- log_result$log_cpue
+  
+  usable_mask <- is.finite(log_cpue) & is.finite(effort_vec)
+  n_usable <- sum(usable_mask)
+  n_valid <- sum(!is.na(log_cpue) & !is.na(effort_vec))
+  
+  result$n_usable <- n_usable
+  result$n_valid <- n_valid
+  
+  years_with_usable <- unique(year_vec[usable_mask])
+  n_usable_years <- length(years_with_usable)
+  frac_usable <- n_usable_years / calendar_length
+  
+  result$n_usable_years <- n_usable_years
+  result$frac_usable <- frac_usable
+  
+  if (n_valid < 3) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "too_few_valid_rows")
+    return(result)
+  }
+  
+  if (n_usable < min_usable) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "n_usable_lt_min_usable")
+    return(result)
+  }
+  
+  if (n_valid < min_n) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "n_valid_lt_min_n")
+    return(result)
+  }
+  
+  if (stats::var(effort_vec[usable_mask], na.rm = TRUE) == 0) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "effort_zero_variance")
+    return(result)
+  }
+  
+  cpue_min <- min(cpue_vec[usable_mask], na.rm = TRUE)
+  if (cpue_min <= 0) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "cpue_min_leq_0")
+    return(result)
+  }
+  
+  rho_ce <- tryCatch({
+    .safe_spearman(catch_vec, effort_vec)
+  }, error = function(e) NA_real_)
+  
+  if (is.na(rho_ce)) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "rho_ce_na")
+    return(result)
+  }
+  
+  result$rho_ce <- rho_ce
+  
+  fit_data <- data.frame(
+    log_cpue = log_cpue[usable_mask],
+    effort = effort_vec[usable_mask],
+    year = year_vec[usable_mask]
+  )
+  
+  fit <- tryCatch({
+    stats::lm(log_cpue ~ effort, data = fit_data)
+  }, error = function(e) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, 
+                                            paste0("error:", e$message))
+    return(NULL)
+  })
+  
+  if (is.null(fit)) {
+    return(result)
+  }
+  
+  coef_vec <- stats::coef(fit)
+  beta <- coef_vec[2]
+  
+  summ <- summary(fit)
+  p_value <- summ$coefficients[2, 4]
+  r_squared <- summ$r.squared
+  
+  result$beta <- beta
+  result$p_value <- p_value
+  result$r_squared <- r_squared
+  
+  effort_mean <- mean(effort_vec[usable_mask], na.rm = TRUE)
+  effort_range <- diff(range(effort_vec[usable_mask], na.rm = TRUE))
+  ec <- effort_range / effort_mean
+  
+  cpue_max <- max(cpue_vec[usable_mask], na.rm = TRUE)
+  ic <- cpue_max / cpue_min
+  
+  result$effort_mean <- effort_mean
+  result$ec <- ec
+  result$ic <- ic
+  
+  rstandard_vals <- stats::rstandard(fit)
+  f_out <- mean(abs(rstandard_vals) > refs$outlier_threshold, na.rm = TRUE)
+  
+  result$f_out <- f_out
+  
+  residuals_vals <- stats::residuals(fit)
+  acf_result <- tryCatch({
+    stats::acf(residuals_vals, lag.max = 1, plot = FALSE)$acf[2]
+  }, error = function(e) NA_real_)
+  
+  result$acf1 <- acf_result
+  
+  ess <- n_usable * (1 - abs(acf_result))
+  result$ess <- ess
+  
+  beta_ref <- refs$beta_ref_base / effort_mean
+  
+  if (beta >= 0) {
+    s_slope <- 0
+  } else {
+    s_beta <- clamp01(-beta / beta_ref)
+    s_p <- clamp01(1 - p_value / refs$p_ref)
+    s_slope <- s_beta * s_p
+  }
+  
+  s_e <- clamp01(ec / refs$ec_ref)
+  s_i <- clamp01(log(ic) / log(refs$ic_ref))
+  s_n <- clamp01((n_usable - refs$n_min_score) / (refs$n_full_score - refs$n_min_score))
+  s_ce <- clamp01((rho_ce + 1) / 2)
+  
+  result$s_slope <- s_slope
+  result$s_e <- s_e
+  result$s_i <- s_i
+  result$s_n <- s_n
+  result$s_ce <- s_ce
+  
+  s_cov <- clamp01((frac_usable - refs$cov_min) / (1 - refs$cov_min))
+  result$s_cov <- s_cov
+  
+  s_ess <- clamp01((ess - refs$ess_min) / (refs$ess_full - refs$ess_min))
+  result$s_ess <- s_ess
+  
+  p_out <- 1 - clamp01(f_out / refs$outlier_cap)
+  result$p_out <- p_out
+  
+  p_miss_cov <- refs$p_miss_cov_lo + (refs$p_miss_cov_hi - refs$p_miss_cov_lo) * s_cov
+  p_miss_ess <- refs$p_miss_ess_lo + (refs$p_miss_ess_hi - refs$p_miss_ess_lo) * s_ess
+  p_miss <- p_miss_cov * p_miss_ess
+  
+  result$p_miss <- p_miss
+  
+  result
+}
+
+#' Compute per-window metrics (LEGACY VERSION)
+#' 
+#' Reproduces original bugs:
+#' - ACF on unsorted rows
+#' - Coverage based on rows present not calendar years
+#' - Other legacy behaviors
+#' 
+#' @param df Data frame for one group
+#' @param start_year Window start year
+#' @param end_year Window end year
+#' @param min_n Minimum window length
+#' @param min_usable Minimum usable observations
+#' @param refs Reference parameters
+#' @param cols Column name list
+#' @return Named list of metrics
+#' @keywords internal
+compute_window_metrics_legacy <- function(df, start_year, end_year,
+                                         min_n = 8, min_usable = 6,
+                                         refs = default_dsi_refs(),
+                                         cols = list(year = "year", catch = "catch",
+                                                    effort = "effort", cpue = "cpue")) {
+  
+  in_window <- .year_in_window(df[[cols$year]], start_year, end_year)
+  d <- df[in_window, ]
+  
+  calendar_length <- end_year - start_year + 1L
+  n_rows <- nrow(d)
+  
+  result <- list(
+    start_year = start_year,
+    end_year = end_year,
+    n_years = calendar_length,
+    n_rows = n_rows,
+    valid = TRUE,
+    reasons_invalid = NA_character_
+  )
+  
+  if (n_rows == 0) {
+    result$valid <- FALSE
+    result$reasons_invalid <- "no_rows_in_window"
+    return(result)
+  }
+  
+  cpue_vec <- d[[cols$cpue]]
+  effort_vec <- d[[cols$effort]]
+  catch_vec <- d[[cols$catch]]
+  year_vec <- d[[cols$year]]
+  
+  log_result <- safe_log_cpue(cpue_vec)
+  log_cpue <- log_result$log_cpue
+  
+  usable_mask <- is.finite(log_cpue) & is.finite(effort_vec)
+  n_usable <- sum(usable_mask)
+  n_valid <- sum(!is.na(log_cpue) & !is.na(effort_vec))
+  
+  result$n_usable <- n_usable
+  result$n_valid <- n_valid
+  
+  frac_usable <- n_usable / n_rows
+  
+  result$n_usable_years <- NA
+  result$frac_usable <- frac_usable
+  
+  if (n_valid < 3) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "too_few_valid_rows")
+    return(result)
+  }
+  
+  if (n_usable < min_usable) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "n_usable_lt_min_usable")
+    return(result)
+  }
+  
+  if (n_valid < min_n) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "n_valid_lt_min_n")
+    return(result)
+  }
+  
+  if (stats::var(effort_vec[usable_mask], na.rm = TRUE) == 0) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "effort_zero_variance")
+    return(result)
+  }
+  
+  cpue_min <- min(cpue_vec[usable_mask], na.rm = TRUE)
+  if (cpue_min <= 0) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "cpue_min_leq_0")
+    return(result)
+  }
+  
+  rho_ce <- tryCatch({
+    .safe_spearman(catch_vec, effort_vec)
+  }, error = function(e) NA_real_)
+  
+  if (is.na(rho_ce)) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, "rho_ce_na")
+    return(result)
+  }
+  
+  result$rho_ce <- rho_ce
+  
+  fit_data <- data.frame(
+    log_cpue = log_cpue[usable_mask],
+    effort = effort_vec[usable_mask],
+    year = year_vec[usable_mask]
+  )
+  
+  fit <- tryCatch({
+    stats::lm(log_cpue ~ effort, data = fit_data)
+  }, error = function(e) {
+    result$valid <- FALSE
+    result$reasons_invalid <- .append_reason(result$reasons_invalid, 
+                                            paste0("error:", e$message))
+    return(NULL)
+  })
+  
+  if (is.null(fit)) {
+    return(result)
+  }
+  
+  coef_vec <- stats::coef(fit)
+  beta <- coef_vec[2]
+  
+  summ <- summary(fit)
+  p_value <- summ$coefficients[2, 4]
+  r_squared <- summ$r.squared
+  
+  result$beta <- beta
+  result$p_value <- p_value
+  result$r_squared <- r_squared
+  
+  effort_mean <- mean(effort_vec[usable_mask], na.rm = TRUE)
+  effort_range <- diff(range(effort_vec[usable_mask], na.rm = TRUE))
+  ec <- effort_range / effort_mean
+  
+  cpue_max <- max(cpue_vec[usable_mask], na.rm = TRUE)
+  ic <- cpue_max / cpue_min
+  
+  result$effort_mean <- effort_mean
+  result$ec <- ec
+  result$ic <- ic
+  
+  rstandard_vals <- stats::rstandard(fit)
+  f_out <- mean(abs(rstandard_vals) > refs$outlier_threshold, na.rm = TRUE)
+  
+  result$f_out <- f_out
+  
+  residuals_vals <- stats::residuals(fit)
+  acf_result <- tryCatch({
+    stats::acf(residuals_vals, lag.max = 1, plot = FALSE)$acf[2]
+  }, error = function(e) NA_real_)
+  
+  result$acf1 <- acf_result
+  
+  ess <- n_usable * (1 - abs(acf_result))
+  result$ess <- ess
+  
+  beta_ref <- refs$beta_ref_base / effort_mean
+  
+  if (beta >= 0) {
+    s_slope <- 0
+  } else {
+    s_beta <- clamp01(-beta / beta_ref)
+    s_p <- clamp01(1 - p_value / refs$p_ref)
+    s_slope <- s_beta * s_p
+  }
+  
+  s_e <- clamp01(ec / refs$ec_ref)
+  s_i <- clamp01(log(ic) / log(refs$ic_ref))
+  s_n <- clamp01((n_usable - refs$n_min_score) / (refs$n_full_score - refs$n_min_score))
+  s_ce <- clamp01((rho_ce + 1) / 2)
+  
+  result$s_slope <- s_slope
+  result$s_e <- s_e
+  result$s_i <- s_i
+  result$s_n <- s_n
+  result$s_ce <- s_ce
+  
+  s_cov <- clamp01((frac_usable - refs$cov_min) / (1 - refs$cov_min))
+  result$s_cov <- s_cov
+  
+  s_ess <- clamp01((ess - refs$ess_min) / (refs$ess_full - refs$ess_min))
+  result$s_ess <- s_ess
+  
+  p_out <- 1 - clamp01(f_out / refs$outlier_cap)
+  result$p_out <- p_out
+  
+  p_miss_cov <- refs$p_miss_cov_lo + (refs$p_miss_cov_hi - refs$p_miss_cov_lo) * s_cov
+  p_miss_ess <- refs$p_miss_ess_lo + (refs$p_miss_ess_hi - refs$p_miss_ess_lo) * s_ess
+  p_miss <- p_miss_cov * p_miss_ess
+  
+  result$p_miss <- p_miss
+  
+  result
+}

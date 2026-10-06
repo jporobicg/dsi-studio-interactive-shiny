@@ -1,0 +1,203 @@
+---
+title: "Data Suitability Index (DSI)"
+subtitle: "Pre-screening for Fox/Schaefer production models"
+format:
+  revealjs:
+    theme: white
+    slide-number: true
+    transition: slide
+    css: DSI_presentation_style.css
+---
+
+## What is DSI?
+
+**Data Suitability Index (DSI)** screens Catch, CPUE, and Effort time-series to identify which **species × fleet** time windows are suitable for Fox/Schaefer-style production model fitting.
+
+- Score **0–100** per candidate window
+- Higher score → more suitable
+- Complements expert judgment; does not replace it
+
+---
+
+## Workflow {.workflow-slide}
+
+```{mermaid}
+#| fig-width: 10
+#| fig-alt: "Flow from input data to DSI and DSI_v2 to outputs"
+flowchart LR
+  A[Input: Catch, CPUE, Effort] --> B[Generate windows]
+  B --> C[Per-window metrics]
+  C --> D[DSI]
+  C --> E[DSI_v2]
+  D --> F[Outputs & plots]
+  E --> F
+```
+
+---
+
+## Window generation
+
+For each **species × fleet**:
+
+- All windows **end at the last available year**
+- Only the **start year** varies → window length varies (between `min_n` and `max_n` years, e.g. 8–20)
+
+::: {.column-page}
+| Symbol | Meaning |
+|--------|--------|
+| $n$ | Number of usable rows (CPUE > 0, effort finite) |
+| $n_{\text{total}}$ | Number of years in the window |
+| $\text{frac\_usable}$ | $n / n_{\text{total}}$ |
+:::
+
+---
+
+## Projection onto $[0,1]$ (notation)
+
+All component scores and penalties are restricted to the interval $[0,1]$ using the **projection** onto $[0,1]$ (standard in optimization and convex analysis):
+
+$$
+\Pi_{[0,1]}(x) \quad \text{or} \quad \mathrm{proj}_{[0,1]}(x)
+$$
+
+**Definition:**
+
+$$
+\Pi_{[0,1]}(x) =
+\begin{cases}
+0 & \text{if } x < 0 \\
+x & \text{if } 0 \le x \le 1 \\
+1 & \text{if } x > 1
+\end{cases}
+$$
+
+Equivalently: $\Pi_{[0,1]}(x) = \min\bigl(1,\, \max(0,\, x)\bigr)$.
+
+---
+
+## DSI: components (scores 0–1)
+
+| Component | Formula / meaning |
+|-----------|-------------------|
+| **S_E** (effort contrast) | $\Pi_{[0,1]}\bigl(\frac{\max(E)-\min(E)}{\overline{E}}\bigr)$ |
+| **S_I** (CPUE contrast) | $\Pi_{[0,1]}\bigl(\frac{\ln(\max(\mathrm{CPUE})/\min(\mathrm{CPUE}))}{\ln 2}\bigr)$ |
+| **S_n** (sample size) | $\Pi_{[0,1]}\bigl(\frac{n-8}{12}\bigr)$ |
+| **S_CE** (catch–effort) | $\Pi_{[0,1]}\bigl(\frac{\rho_S(C,E)+1}{2}\bigr)$; $\rho_S$ = **Spearman** correlation |
+| **S_slope** | From $\ln(\mathrm{CPUE}) \sim E$: negative slope favoured. **$\beta_{\mathrm{ref}}$** = reference slope (e.g. $0.02/\overline{E}$). **$p_{\mathrm{ref}}$** = reference $p$-value threshold (e.g. 0.20). |
+| **P_out** (outlier penalty) | $1 - \Pi_{[0,1]}(f_{\mathrm{out}}/0.20)$, $f_{\mathrm{out}} =$ fraction of $\|r_{\mathrm{std}}\| > 2$ |
+
+All scores use $\Pi_{[0,1]}$ so they stay in $[0,1]$.
+
+---
+
+## DSI: main equation
+
+$$
+\begin{aligned}
+\mathrm{DSI} &= 100 \times \bigl(\text{weighted sum}\bigr) \times P_{\mathrm{out}} \\[0.5em]
+\text{weighted sum} &= 0.35\,S_{\mathrm{slope}} + 0.20\,S_E + 0.20\,S_I \\
+&\quad + 0.10\,S_n + 0.10\,S_{CE}
+\end{aligned}
+$$
+
+- Result projected to **[0, 100]**
+
+---
+
+## DSI_v2: robustness layer
+
+DSI_v2 downweights DSI using **missing-data** and **influence/stability**:
+
+- **P_miss**: coverage (S_cov) and effective sample size (S_ESS)
+- **P_out**: fraction of large residuals (as in DSI)
+- **P_inf**: Cook's distance and leverage
+- **S_stab**: leave-one-out slope sign stability
+- **S_fitE**: correlation of fitted values with effort
+
+---
+
+## DSI_v2: equation
+
+$$
+\begin{aligned}
+\mathrm{DSI\_v2} &= \mathrm{DSI}_{\mathrm{base}} \times P_{\mathrm{miss}} \times P_{\mathrm{out}} \times P_{\mathrm{inf}} \\
+&\quad \times (0.85 + 0.15\,S_{\mathrm{stab}}) \times (0.85 + 0.15\,S_{\mathrm{fitE}})
+\end{aligned}
+$$
+
+Projected to **[0, 100]**.
+
+**NA defaults** (when a component is missing): $P_{\mathrm{miss}}\to 0.7$, $P_{\mathrm{out}}\to 1$, $P_{\mathrm{inf}}\to 1$, $S_{\mathrm{stab}}\to 0.7$, $S_{\mathrm{fitE}}\to 0.7$.
+
+---
+
+## Interpretation
+
+| DSI (or DSI_v2) | Interpretation |
+|-----------------|----------------|
+| **≥ 70** | Good |
+| **50 – 70** | Moderate |
+| **< 50** | Poor |
+
+---
+
+## DSI / DSI_v2 by species: ANC
+
+![DSI and DSI_v2 vs start year by fleet (ANC)](outputs/dsi_by_species__ANC.png){width=90%}
+
+---
+
+## DSI / DSI_v2 by species: CMA
+
+![DSI and DSI_v2 vs start year by fleet (CMA)](outputs/dsi_by_species__CMA.png){width=90%}
+
+---
+
+## DSI / DSI_v2 by species: DMF
+
+![DSI and DSI_v2 vs start year by fleet (DMF)](outputs/dsi_by_species__DMF.png){width=90%}
+
+---
+
+## DSI / DSI_v2 by species: LPF
+
+![DSI and DSI_v2 vs start year by fleet (LPF)](outputs/dsi_by_species__LPF.png){width=90%}
+
+---
+
+## DSI / DSI_v2 by species: MPF
+
+![DSI and DSI_v2 vs start year by fleet (MPF)](outputs/dsi_by_species__MPF.png){width=90%}
+
+---
+
+## DSI / DSI_v2 by species: NTU
+
+![DSI and DSI_v2 vs start year by fleet (NTU)](outputs/dsi_by_species__NTU.png){width=90%}
+
+---
+
+## DSI / DSI_v2 by species: SAR
+
+![DSI and DSI_v2 vs start year by fleet (SAR)](outputs/dsi_by_species__SAR.png){width=90%}
+
+---
+
+## DSI / DSI_v2 by species: SCP
+
+![DSI and DSI_v2 vs start year by fleet (SCP)](outputs/dsi_by_species__SCP.png){width=90%}
+
+---
+
+## Summary
+
+- **DSI**: suitability of a time window from effort/CPUE contrast, slope, sample size, catch–effort realism, and outlier penalty.
+- **DSI_v2**: same, with extra downweighting for missing data, influence, and slope stability.
+- Run from `01_DSI_screening`: `Rscript R/run_dsi_screening.R`
+- Outputs: `dsi_all_windows.csv`, `dsi_top_windows.csv`, `dsi_best_window_selected.csv`, and PNGs in `outputs/`.
+
+---
+
+## Thank you
+
+Questions?

@@ -1,0 +1,44 @@
+MAIN: windows 132  valid 132 
+
+<NA> 
+ 132 
+   species   dsi dsi_v2 p_out P_miss p_inf s_fit_e s_stab
+1  Anchovy 60.34  28.09  0.67   0.90  0.48       1   1.00
+2 Demersal 54.27  26.18  0.80   0.91  0.75       1   0.48
+3  Pelagic 42.43  20.28  0.73   0.91  0.57       1   0.67
+   species group_key     fleet start_year end_year   DSI_v2 n_usable
+1  Anchovy   Anchovy ALL_FLEET       2017     2024 59.87318        8
+2 Demersal  Demersal ALL_FLEET       1998     2024 70.31871       27
+3  Pelagic   Pelagic ALL_FLEET       2001     2024 49.94880       24
+  frac_usable          beta            p        EC       IC READY
+1           1 -2.171541e-05 0.0277968787 0.6736009 2.491637 FALSE
+2           1 -2.828469e-06 0.0103678684 1.3868678 2.381733  TRUE
+3           1 -3.565043e-06 0.0001003637 1.4291055 1.739555 FALSE
+  selection_reason
+1       low_DSI_v2
+2    auto_selected
+3       low_DSI_v2
+Anchovy : best by DSI start 2011 ( 87.6 ) ; best by DSI_v2 start 2017 ( 59.9 )
+Demersal : best by DSI start 2008 ( 90.2 ) ; best by DSI_v2 start 1998 ( 70.3 )
+Pelagic : best by DSI start 1998 ( 72.2 ) ; best by DSI_v2 start 2001 ( 49.9 )
+end_year unique per group (heatmap y axis): 1 1 1 
+
+SPECIES x FLEET: groups 47  windows 493  valid 241 ; groups with >=1 valid window 36 
+groups with no windows at all (span < min_n): DMF | APS 
+DSI q10/50/90: 28.8 43.1 55.9  DSI_v2: 2.6 10.4 22  s_drift (x100): 0 4 54.8 
+share valid windows with s_drift == 0: 0.15 
+best DSI_v2 per group; n >=70: 0  50-70: 0  <50: 36 
+ group_key start_year end_year      dsi   dsi_v2
+ LPF | OBT       2004     2023 54.05261 41.86826
+ ANC | APS       2008     2023 51.79412 32.27138
+ DMF | OBT       2004     2023 46.43985 28.51987
+ MPF | OBT       2004     2023 44.98769 28.22620
+ ANC | OBT       2006     2023 42.42390 26.71317
+  ANC | PS       2004     2023 54.63175 26.31429
+  MPF | PS       2004     2023 79.64163 25.83016
+ SCP | APS       2006     2023 71.96432 25.14570
+r
+                 valid n_usable_lt_min_usable       n_valid_lt_min_n 
+                   241                    142                     74 
+    too_few_valid_rows 
+                    36 
