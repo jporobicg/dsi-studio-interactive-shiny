@@ -19,6 +19,22 @@ default_selection_opts <- function() {
   )
 }
 
+#' Select best window per group
+#'
+#' @param dsi_all Data frame with all windows and their scores
+#' @param opts Selection options
+#' @param group_col Name of group column
+#' @param stability_filter TRUE = corrected filter; FALSE = the original,
+#'   always-true filter
+#' @return Data frame with best window per group and READY status
+#' @export
+select_best_window <- function(dsi_all, opts = default_selection_opts(),
+                               group_col = "group_key", stability_filter = TRUE) {
+  opts <- utils::modifyList(default_selection_opts(), opts %||% list())
+  if (stability_filter) select_best_window_corrected(dsi_all, opts, group_col)
+  else select_best_window_legacy(dsi_all, opts, group_col)
+}
+
 #' Select best window per group (CORRECTED VERSION)
 #' 
 #' Fixed stability filter and proper grouping.

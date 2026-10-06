@@ -17,7 +17,7 @@ compute_window_v2_metrics_corrected <- function(df, start_year, end_year,
                                                refs = default_dsi_refs(),
                                                cols = list(year = "year", catch = "catch",
                                                           effort = "effort", cpue = "cpue")) {
-  
+  refs <- utils::modifyList(default_dsi_refs(), refs %||% list())
   in_window <- .year_in_window(df[[cols$year]], start_year, end_year)
   d <- df[in_window, ]
   
@@ -332,37 +332,61 @@ compute_dsi_v2_robust <- function(metrics, v2_metrics, weights = default_dsi_wei
 #' @param end_year Window end
 #' @param method "corrected" or "legacy"
 #' @param refs Reference parameters
-#' @param weights Weight configuration
+#' @param weights Weight configuration (default follows `fixes$weights_sum_one`)
 #' @param include_v2 Whether to compute v2 metrics
+#' @param fixes Bug-fix switches (default from `method`, see [dsi_fix_flags()])
+#' @param min_n,min_usable Validity thresholds passed to [compute_window_metrics()]
 #' @return List with all metrics and scores
 #' @export
 score_window <- function(df, start_year, end_year, 
                         method = "corrected",
                         refs = default_dsi_refs(),
-                        weights = default_dsi_weights(legacy = method == "legacy"),
-                        include_v2 = TRUE) {
+                        weights = NULL,
+                        include_v2 = TRUE,
+                        fixes = NULL,
+                        min_n = 8, min_usable = 6) {
+  fixes <- fixes %||% dsi_fix_flags(method)
+  weights <- weights %||% default_dsi_weights(legacy = !isTRUE(fixes$weights_sum_one))
   
-  if (method == "corrected") {
-    metrics <- compute_window_metrics_corrected(df, start_year, end_year, 
-                                               refs = refs)
-  } else {
-    metrics <- compute_window_metrics_legacy(df, start_year, end_year,
-                                            refs = refs)
-  }
+  metrics <- compute_window_metrics(df, start_year, end_year,
+                                    min_n = min_n, min_usable = min_usable, refs = refs,
+                                    sort_by_year = isTRUE(fixes$sort_by_year),
+                                    calendar_coverage = isTRUE(fixes$calendar_coverage))
   
   metrics$dsi_base <- compute_dsi_base(metrics, weights)
   metrics$dsi <- compute_dsi(metrics, weights)
   
   if (include_v2 && metrics$valid) {
-    if (method == "corrected") {
-      v2_metrics <- compute_window_v2_metrics_corrected(df, start_year, end_year, refs = refs)
-    } else {
-      v2_metrics <- compute_window_v2_metrics_legacy(df, start_year, end_year, refs = refs)
-    }
-    
+    v2_metrics <- compute_window_v2_metrics_corrected(df, start_year, end_year, refs = refs)
     metrics <- c(metrics, v2_metrics)
     metrics$dsi_v2 <- compute_dsi_v2_robust(metrics, v2_metrics, weights)
   }
   
   metrics
+}
+
+#' Re-score windows with different weights without refitting
+#'
+#' DSI, DSI_base and DSI_v2 are products of stored components, so changing
+#' the weights only needs arithmetic on an existing `dsi_all` table.
+#' @param dsi_all Table from [run_dsi_workflow()]
+#' @param weights New weights
+#' @return `dsi_all` with dsi_base, dsi and dsi_v2 recomputed
+#' @export
+rescore_with_weights <- function(dsi_all, weights) {
+  base <- 100 * (weights$w_slope * dsi_all$s_slope + weights$w_e * dsi_all$s_e +
+                 weights$w_i * dsi_all$s_i + weights$w_n * dsi_all$s_n +
+                 weights$w_ce * dsi_all$s_ce)
+  base[!dsi_all$valid] <- NA_real_
+  p_out <- ifelse(is.na(dsi_all$p_out), 1, dsi_all$p_out)
+  p_miss <- ifelse(is.na(dsi_all$p_miss), 0.7, dsi_all$p_miss)
+  p_inf <- ifelse(is.na(dsi_all$p_inf), 1, dsi_all$p_inf)
+  s_stab <- ifelse(is.na(dsi_all$s_stab), 0.7, dsi_all$s_stab)
+  s_fit_e <- ifelse(is.na(dsi_all$s_fit_e), 0.7, dsi_all$s_fit_e)
+  v2 <- base * p_miss * p_out * p_inf * (0.85 + 0.15 * s_stab) * (0.85 + 0.15 * s_fit_e)
+  v2[!dsi_all$valid | is.na(base) | base <= 0] <- NA_real_
+  dsi_all$dsi_base <- base
+  dsi_all$dsi <- base * p_out
+  dsi_all$dsi_v2 <- v2
+  dsi_all
 }
