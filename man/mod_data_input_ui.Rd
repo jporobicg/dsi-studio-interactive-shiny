@@ -6,6 +6,9 @@
 \usage{
 mod_data_input_ui(id)
 }
+\arguments{
+\item{id}{Module namespace id}
+}
 \description{
 Data input UI
 }

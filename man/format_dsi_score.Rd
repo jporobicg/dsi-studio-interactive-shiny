@@ -6,6 +6,11 @@
 \usage{
 format_dsi_score(score, digits = 0)
 }
+\arguments{
+\item{score}{Numeric DSI score(s)}
+
+\item{digits}{Number of decimal places}
+}
 \description{
 Format DSI score for display
 }

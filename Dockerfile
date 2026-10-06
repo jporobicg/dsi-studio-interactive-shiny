@@ -1,7 +1,7 @@
 FROM rocker/r-ver:4.3.2
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# System libraries needed by the R dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libcurl4-openssl-dev \
     libssl-dev \
     libxml2-dev \
@@ -14,38 +14,16 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
+WORKDIR /src
 
-# Copy package files
-COPY DESCRIPTION .
-COPY LICENSE .
+# Install dependencies first (cached layer), then the package itself
+COPY DESCRIPTION ./
+RUN R -e "install.packages('remotes', repos = 'https://cloud.r-project.org'); \
+          remotes::install_deps('.', dependencies = NA, repos = 'https://cloud.r-project.org')"
 
-# Install R package dependencies
-RUN R -e "install.packages(c( \
-    'shiny', \
-    'bslib', \
-    'dplyr', \
-    'tidyr', \
-    'ggplot2', \
-    'readr', \
-    'readxl', \
-    'DT', \
-    'digest', \
-    'gridExtra', \
-    'yaml', \
-    'jsonlite', \
-    'testthat' \
-  ), repos='https://cloud.r-project.org/')"
+COPY . .
+RUN R CMD INSTALL --no-docs --no-multiarch . && rm -rf /src
 
-# Copy application files
-COPY app.R .
-COPY R/ ./R/
-COPY inst/ ./inst/
-COPY tests/ ./tests/
-
-# Expose port
 EXPOSE 43210
 
-# Run app
-CMD ["R", "-e", "shiny::runApp('.', port=43210, host='0.0.0.0')"]
+CMD ["R", "-e", "dsiStudio::run_app(port = 43210, host = '0.0.0.0')"]

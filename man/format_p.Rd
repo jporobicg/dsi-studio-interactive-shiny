@@ -6,6 +6,9 @@
 \usage{
 format_p(p)
 }
+\arguments{
+\item{p}{Numeric p-value(s)}
+}
 \description{
 Format a p-value
 }

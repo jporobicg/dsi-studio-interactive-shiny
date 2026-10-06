@@ -6,6 +6,11 @@
 \usage{
 mod_data_input_server(id, app_state)
 }
+\arguments{
+\item{id}{Module namespace id}
+
+\item{app_state}{Shared \code{\link[shiny:reactiveValues]{shiny::reactiveValues()}} holding the app state}
+}
 \description{
 Data input server
 }

@@ -6,6 +6,9 @@
 \usage{
 mod_report_ui(id)
 }
+\arguments{
+\item{id}{Module namespace id}
+}
 \description{
 Report UI
 }

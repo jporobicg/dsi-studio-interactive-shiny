@@ -16,30 +16,47 @@ dsiStudio implements the Data Suitability Index (DSI) method for evaluating time
 
 ## Installation
 
-Install from GitHub using `pak` or `remotes`:
+Install from GitHub with `remotes` (R >= 4.1):
 
 ```r
-# Using pak (recommended)
-pak::pak("jporobicg/dsi-studio-interactive-shiny")
-
-# Using remotes
+install.packages("remotes")
 remotes::install_github("jporobicg/dsi-studio-interactive-shiny")
 ```
+
+`pak::pak("jporobicg/dsi-studio-interactive-shiny")` works too.
 
 ## Usage
 
 Launch the interactive Shiny application:
 
 ```r
-library(dsiStudio)
-run_app()
+dsiStudio::run_app()
 ```
 
-By default, the app runs on host `0.0.0.0` without launching a browser. To customize:
+By default the app listens on host `0.0.0.0` without opening a browser. To customise:
 
 ```r
-run_app(port = 3838, host = "127.0.0.1", launch.browser = TRUE)
+dsiStudio::run_app(port = 3838, host = "127.0.0.1", launch.browser = TRUE)
 ```
+
+`run_app()` returns a Shiny app object that starts when printed (as at the
+console). From a script, use `shiny::runApp(dsiStudio::run_app(), port = 3838)`.
+
+The example datasets can also be loaded directly:
+
+```r
+thai <- dsiStudio::load_demo_data("main_groups")
+fleet <- dsiStudio::load_demo_data("species_fleet")
+```
+
+### Docker
+
+```sh
+docker build -t dsi-studio .
+docker run -p 43210:43210 dsi-studio
+```
+
+Then open <http://localhost:43210>.
 
 ## Workflow
 
@@ -74,11 +91,11 @@ Reproduces the original implementation exactly for verification, bugs included.
 
 Example datasets are included in the package (`inst/demo_data/`):
 - Thai Main Groups: 3 groups, 1971-2024
-- Species × Fleet: 8 species × 3 gears, 1971-2024
+- Species × Fleet: 8 species × 6 gears, 1971-2023
 
 ## License
 
-MIT License. See `LICENSE` file for details.
+MIT License. See `LICENSE.md` for details.
 
 ## Author
 

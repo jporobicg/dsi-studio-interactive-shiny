@@ -1,8 +1,5 @@
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-## ~ DSI Studio: app.R wrapper                  ~ ##
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-## This file allows running the app via shiny::runApp() from the package root.
-## When installed as a package, use dsiStudio::run_app() instead.
+## Launcher for shiny::runApp() or Shiny Server / Posit Connect deployments.
+## Requires the dsiStudio package to be installed; otherwise use
+## dsiStudio::run_app() directly.
 
-library(dsiStudio)
-run_app()
+dsiStudio::run_app()

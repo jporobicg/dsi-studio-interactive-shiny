@@ -104,7 +104,7 @@ run_dsi_workflow <- function(df,
   
   report_progress("Compiling results...", 0.85)
   
-  # [LOCAL FIX 7] invalid windows return fewer fields than valid ones, so
+  # Invalid windows return fewer fields than valid ones, so
   # do.call(rbind, ...) failed with "numbers of columns of arguments do not
   # match" on the Species x Fleet demo. bind_rows() fills missing fields with NA.
   dsi_all <- dplyr::bind_rows(lapply(dsi_results, function(x) {

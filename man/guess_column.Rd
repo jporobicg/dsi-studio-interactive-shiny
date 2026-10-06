@@ -15,6 +15,6 @@ guess_column(col_names, candidates)
 Character string of matched column name, or empty string
 }
 \description{
-\link{LOCAL FIX} guess_column() is called by mod_data_input.R but was never defined.
+Pick first column whose lower-cased name matches one of the candidates
 }
 \keyword{internal}

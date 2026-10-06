@@ -71,6 +71,7 @@ dsi_param_sections <- function() {
 .fmt_default <- function(x) format(x, trim = TRUE, drop0trailing = TRUE, scientific = FALSE)
 
 #' Screen UI
+#' @param id Module namespace id
 #' @export
 mod_screen_ui <- function(id) {
   ns <- NS(id)
@@ -130,6 +131,8 @@ mod_screen_ui <- function(id) {
 }
 
 #' Screen server
+#' @param id Module namespace id
+#' @param app_state Shared [shiny::reactiveValues()] holding the app state
 #' @export
 mod_screen_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {

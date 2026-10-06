@@ -107,37 +107,26 @@ create_sparkline_svg <- function(values, width = 80, height = 30, color = "#3498
 
 #' Load demo dataset
 #' 
+#' Reads one of the example datasets shipped in `inst/demo_data`.
+#' 
 #' @param dataset_name Name of demo dataset ("main_groups" or "species_fleet")
-#' @return Data frame
+#' @return Data frame (tibble)
 #' @export
-load_demo_data <- function(dataset_name = "main_groups") {
-  demo_path <- system.file("demo_data", package = "dsiapp")
-  
-  if (dataset_name == "main_groups") {
-    file_path <- file.path(demo_path, "Thai_main_groups.csv")
-  } else if (dataset_name == "species_fleet") {
-    file_path <- file.path(demo_path, "all_species_combined.csv")
-  } else {
-    stop("Unknown dataset name")
-  }
-  
-  if (demo_path == "" || !file.exists(file_path)) {
-    file_path <- file.path("inst/demo_data", 
-                          ifelse(dataset_name == "main_groups", 
-                                "Thai_main_groups.csv",
-                                "all_species_combined.csv"))
-  }
-  
-  if (!file.exists(file_path)) {
-    stop("Demo data file not found")
+load_demo_data <- function(dataset_name = c("main_groups", "species_fleet")) {
+  dataset_name <- match.arg(dataset_name)
+  file_name <- switch(dataset_name,
+    main_groups = "Thai_main_groups.csv",
+    species_fleet = "all_species_combined.csv"
+  )
+  file_path <- system.file("demo_data", file_name, package = "dsiStudio")
+  if (!nzchar(file_path) || !file.exists(file_path)) {
+    stop("Demo data file not found: ", file_name)
   }
   
   readr::read_csv(file_path, show_col_types = FALSE)
 }
 
 #' Pick first column whose lower-cased name matches one of the candidates
-#' 
-#' [LOCAL FIX] guess_column() is called by mod_data_input.R but was never defined.
 #' 
 #' @param col_names Character vector of column names
 #' @param candidates Character vector of candidate names to match

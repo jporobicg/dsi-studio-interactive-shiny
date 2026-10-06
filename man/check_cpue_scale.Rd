@@ -11,7 +11,7 @@ check_cpue_scale(df, group_cols = c("species", "fleet"), tol = 0.01)
 
 \item{group_cols}{Grouping columns}
 
-\item{tol}{Relative tolerance for "constant" (default 1\\%, allows rounding)}
+\item{tol}{Relative tolerance for "constant" (default 1\%, allows rounding)}
 }
 \value{
 List with \code{finding_name}, \code{finding} (NULL if CPUE = catch/effort),

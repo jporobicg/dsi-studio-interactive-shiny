@@ -8,13 +8,16 @@
 \description{
 Interactive Shiny application for screening fisheries catch/effort data using the Data Suitability Index (DSI). Scores time windows for suitability in Fox/Schaefer surplus production models.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/jporobicg/dsi-studio-interactive-shiny}
+  \item Report bugs at \url{https://github.com/jporobicg/dsi-studio-interactive-shiny/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Javier Porobic \email{jporobicg@gmail.com}
-
-Authors:
-\itemize{
-  \item Javier Porobic \email{jporobicg@gmail.com}
-}
 
 }
 \keyword{internal}

@@ -6,6 +6,9 @@
 \usage{
 mod_screen_ui(id)
 }
+\arguments{
+\item{id}{Module namespace id}
+}
 \description{
 Screen UI
 }

@@ -2,7 +2,7 @@
 ## ~ DSI Core: utility functions ~ ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-#' Clamp values to [0, 1]
+#' Clamp values to the unit interval
 #' @param x Numeric vector
 #' @return Clamped values
 clamp01 <- function(x) {
@@ -118,5 +118,5 @@ safe_log_cpue <- function(cpue) {
 }
 
 #' Null-coalescing operator (base R >= 4.4 has one; defined here for older R)
-#' @keywords internal
+#' @noRd
 `%||%` <- function(a, b) if (is.null(a)) b else a

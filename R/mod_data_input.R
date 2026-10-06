@@ -3,6 +3,7 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 #' Data input UI
+#' @param id Module namespace id
 #' @export
 mod_data_input_ui <- function(id) {
   ns <- NS(id)
@@ -19,6 +20,8 @@ mod_data_input_ui <- function(id) {
 }
 
 #' Data input server
+#' @param id Module namespace id
+#' @param app_state Shared [shiny::reactiveValues()] holding the app state
 #' @export
 mod_data_input_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {

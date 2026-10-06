@@ -6,6 +6,9 @@
 \usage{
 mod_context_rail_ui(id)
 }
+\arguments{
+\item{id}{Module namespace id}
+}
 \description{
 Context rail UI
 }

@@ -7,21 +7,28 @@
 run_app(port = NULL, host = "0.0.0.0", launch.browser = FALSE)
 }
 \arguments{
-\item{port}{Port number (optional)}
+\item{port}{Port number (optional; defaults to the \code{shiny.port} option or a
+random port)}
 
 \item{host}{Host address (default "0.0.0.0")}
 
 \item{launch.browser}{Whether to launch browser (default FALSE)}
 }
 \value{
-No return value; runs the Shiny app
+A \code{shiny.appobj}; printing it runs the app
 }
 \description{
 Launch the DSI Studio interactive Shiny application.
+}
+\details{
+Returns a Shiny app object. Called at the console (or as the last
+expression of \code{app.R}) the object is printed, which starts the app. Inside
+a script or function, wrap it in \code{\link[shiny:runApp]{shiny::runApp()}} or call \code{\link[=print]{print()}}.
 }
 \examples{
 \dontrun{
   run_app()
   run_app(port = 3838, launch.browser = TRUE)
+  shiny::runApp(run_app(), port = 3838)
 }
 }

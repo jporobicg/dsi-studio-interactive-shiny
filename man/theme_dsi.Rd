@@ -6,6 +6,9 @@
 \usage{
 theme_dsi(base_size = 11)
 }
+\arguments{
+\item{base_size}{Base font size}
+}
 \description{
 ggplot2 theme for DSI plots
 }

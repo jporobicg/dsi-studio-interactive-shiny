@@ -2,7 +2,7 @@
 % Please edit documentation in R/dsicore_utils.R
 \name{clamp01}
 \alias{clamp01}
-\title{Clamp values to \link{0, 1}}
+\title{Clamp values to the unit interval}
 \usage{
 clamp01(x)
 }
@@ -13,5 +13,5 @@ clamp01(x)
 Clamped values
 }
 \description{
-Clamp values to \link{0, 1}
+Clamp values to the unit interval
 }

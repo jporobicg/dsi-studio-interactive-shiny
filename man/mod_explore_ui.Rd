@@ -6,6 +6,9 @@
 \usage{
 mod_explore_ui(id)
 }
+\arguments{
+\item{id}{Module namespace id}
+}
 \description{
 Explore UI
 }

@@ -6,6 +6,9 @@
 \usage{
 mod_decide_ui(id)
 }
+\arguments{
+\item{id}{Module namespace id}
+}
 \description{
 Decide UI
 }

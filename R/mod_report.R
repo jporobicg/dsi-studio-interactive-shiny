@@ -3,6 +3,7 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 #' Report UI
+#' @param id Module namespace id
 #' @export
 mod_report_ui <- function(id) {
   ns <- NS(id)
@@ -56,6 +57,8 @@ dsi_write_report <- function(app_state, file) {
 }
 
 #' Report server
+#' @param id Module namespace id
+#' @param app_state Shared [shiny::reactiveValues()] holding the app state
 #' @export
 mod_report_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {

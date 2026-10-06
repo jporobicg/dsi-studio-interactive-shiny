@@ -28,6 +28,7 @@ dsi_band_colors <- function() {
 }
 
 #' ggplot2 theme for DSI plots
+#' @param base_size Base font size
 #' @export
 theme_dsi <- function(base_size = 11) {
   theme_minimal(base_size = base_size) +
@@ -44,6 +45,8 @@ theme_dsi <- function(base_size = 11) {
 }
 
 #' Format DSI score for display
+#' @param score Numeric DSI score(s)
+#' @param digits Number of decimal places
 #' @export
 format_dsi_score <- function(score, digits = 0) {
   if (is.null(score) || length(score) == 0 || is.na(score) || !is.finite(score)) return("\u2014")
@@ -71,6 +74,7 @@ format_beta <- function(x, digits = 3) {
 }
 
 #' Format a p-value
+#' @param p Numeric p-value(s)
 #' @export
 format_p <- function(p) {
   if (is.null(p) || length(p) == 0 || is.na(p)) return("\u2014")

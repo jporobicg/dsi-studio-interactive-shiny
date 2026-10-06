@@ -4,14 +4,14 @@
 \alias{load_demo_data}
 \title{Load demo dataset}
 \usage{
-load_demo_data(dataset_name = "main_groups")
+load_demo_data(dataset_name = c("main_groups", "species_fleet"))
 }
 \arguments{
 \item{dataset_name}{Name of demo dataset ("main_groups" or "species_fleet")}
 }
 \value{
-Data frame
+Data frame (tibble)
 }
 \description{
-Load demo dataset
+Reads one of the example datasets shipped in \code{inst/demo_data}.
 }

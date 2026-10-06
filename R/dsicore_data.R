@@ -183,7 +183,7 @@ audit_data <- function(df, group_cols = c("species", "fleet")) {
     )
   }
   
-  # [LOCAL FIX 1] effort_conflicts/effort_n_unique only exist after effort
+  # effort_conflicts/effort_n_unique only exist after effort
   # harmonisation; the Audit tab passes un-harmonised data_std, so the filter
   # threw "object 'effort_conflicts' not found" inside an observer and Shiny
   # killed the whole session right after "Apply Mapping".
@@ -262,7 +262,7 @@ audit_data <- function(df, group_cols = c("species", "fleet")) {
 #'
 #' @param df Standardised data (year, species, fleet, catch, effort, cpue)
 #' @param group_cols Grouping columns
-#' @param tol Relative tolerance for "constant" (default 1\%, allows rounding)
+#' @param tol Relative tolerance for "constant" (default 1%, allows rounding)
 #' @return List with `finding_name`, `finding` (NULL if CPUE = catch/effort),
 #'   overall `scale`, and per-group table `groups`
 #' @export

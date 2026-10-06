@@ -77,15 +77,48 @@ importFrom(dplyr,
   summarize,
   ungroup
 )
+importFrom(echarts4r,
+  e_animation,
+  e_bar,
+  e_charts,
+  e_flip_coords,
+  e_grid,
+  e_legend,
+  e_line,
+  e_mark_line,
+  e_scatter,
+  e_tooltip,
+  e_x_axis,
+  e_y_axis,
+  echarts4rOutput,
+  renderEcharts4r
+)
 importFrom(ggplot2,
+  aes,
   element_blank,
   element_line,
   element_rect,
   element_text,
+  geom_hline,
+  geom_line,
+  geom_point,
+  geom_smooth,
+  ggplot,
+  labs,
   theme,
   theme_minimal
+)
+importFrom(graphics,
+  plot.new,
+  text
+)
+importFrom(stats,
+  fitted,
+  lm,
+  rstandard
 )
 importFrom(tidyr,
   pivot_longer,
   pivot_wider
 )
+importFrom(utils,head)

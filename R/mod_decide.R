@@ -3,6 +3,7 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 #' Decide UI
+#' @param id Module namespace id
 #' @export
 mod_decide_ui <- function(id) {
   ns <- NS(id)
@@ -23,6 +24,8 @@ mod_decide_ui <- function(id) {
 }
 
 #' Decide server
+#' @param id Module namespace id
+#' @param app_state Shared [shiny::reactiveValues()] holding the app state
 #' @export
 mod_decide_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {

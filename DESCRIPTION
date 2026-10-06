@@ -8,6 +8,8 @@ Description: Interactive Shiny application for screening fisheries catch/effort 
     using the Data Suitability Index (DSI). Scores time windows for suitability in
     Fox/Schaefer surplus production models.
 License: MIT + file LICENSE
+URL: https://github.com/jporobicg/dsi-studio-interactive-shiny
+BugReports: https://github.com/jporobicg/dsi-studio-interactive-shiny/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Depends:
@@ -27,10 +29,15 @@ Imports:
     DT (>= 0.30),
     digest (>= 0.6.0),
     gridExtra (>= 2.3),
-    zip (>= 2.2.0)
+    zip (>= 2.2.0),
+    htmltools,
+    base64enc,
+    graphics,
+    stats,
+    utils
 Suggests:
     testthat (>= 3.0.0),
     shinytest2 (>= 0.3.0),
-    vdiffr (>= 1.0.0)
+    chromote
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.0

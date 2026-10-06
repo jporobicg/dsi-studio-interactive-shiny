@@ -6,24 +6,27 @@
 #' 
 #' Launch the DSI Studio interactive Shiny application.
 #' 
-#' @param port Port number (optional)
+#' Returns a Shiny app object. Called at the console (or as the last
+#' expression of `app.R`) the object is printed, which starts the app. Inside
+#' a script or function, wrap it in [shiny::runApp()] or call [print()].
+#' 
+#' @param port Port number (optional; defaults to the `shiny.port` option or a
+#'   random port)
 #' @param host Host address (default "0.0.0.0")
 #' @param launch.browser Whether to launch browser (default FALSE)
-#' @return No return value; runs the Shiny app
+#' @return A `shiny.appobj`; printing it runs the app
 #' @export
 #' @examples
 #' \dontrun{
 #'   run_app()
 #'   run_app(port = 3838, launch.browser = TRUE)
+#'   shiny::runApp(run_app(), port = 3838)
 #' }
 run_app <- function(port = NULL, host = "0.0.0.0", launch.browser = FALSE) {
-  app <- shiny::shinyApp(ui = dsi_studio_ui(), server = dsi_studio_server)
-  shiny::runApp(
-    app, 
-    port = port %||% getOption("shiny.port"), 
-    host = host, 
-    launch.browser = launch.browser
-  )
+  opts <- list(host = host, launch.browser = launch.browser)
+  port <- port %||% getOption("shiny.port")
+  if (!is.null(port)) opts$port <- port
+  shiny::shinyApp(ui = dsi_studio_ui(), server = dsi_studio_server, options = opts)
 }
 
 #' UI definition
