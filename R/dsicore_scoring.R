@@ -295,7 +295,9 @@ compute_dsi <- function(metrics, weights = default_dsi_weights()) {
   dsi_base <- compute_dsi_base(metrics, weights)
   if (is.na(dsi_base)) return(NA_real_)
   
-  dsi_base * metrics$p_out
+  p_out <- if (is.na(metrics$p_out)) 1.0 else metrics$p_out
+  
+  dsi_base * p_out
 }
 
 #' Compute DSI_v2 robust score

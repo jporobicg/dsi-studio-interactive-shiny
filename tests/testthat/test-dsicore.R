@@ -110,7 +110,9 @@ test_that("compute_window_metrics handles valid window", {
   expect_equal(metrics$end_year, 2020)
   expect_equal(metrics$n_usable, 11)
   expect_true(is.finite(metrics$beta))
-  expect_true(is.finite(metrics$dsi))
+  
+  dsi <- compute_dsi(metrics)
+  expect_true(is.finite(dsi))
 })
 
 test_that("DSI band assignment is correct", {

@@ -11,39 +11,47 @@
 #' @return Data frame with standardized columns
 #' @export
 standardize_columns <- function(df, col_map) {
-  out <- data.frame(stringsAsFactors = FALSE)
+  n_rows <- nrow(df)
   
   if ("year" %in% names(col_map)) {
-    out$year <- as.integer(df[[col_map$year]])
+    year_vals <- as.integer(df[[col_map$year]])
   } else if ("date" %in% names(col_map)) {
     dates <- as.Date(df[[col_map$date]])
-    out$year <- as.integer(format(dates, "%Y"))
+    year_vals <- as.integer(format(dates, "%Y"))
   } else {
     stop("col_map must include 'year' or 'date'")
   }
   
   if ("species" %in% names(col_map) && !is.null(col_map$species)) {
-    out$species <- as.character(df[[col_map$species]])
+    species_vals <- as.character(df[[col_map$species]])
   } else {
-    out$species <- "ALL"
+    species_vals <- rep("ALL", n_rows)
   }
   
   if ("fleet" %in% names(col_map) && !is.null(col_map$fleet)) {
-    out$fleet <- as.character(df[[col_map$fleet]])
+    fleet_vals <- as.character(df[[col_map$fleet]])
   } else {
-    out$fleet <- "ALL_FLEET"
+    fleet_vals <- rep("ALL_FLEET", n_rows)
   }
   
-  out$catch <- suppressWarnings(as.numeric(df[[col_map$catch]]))
-  out$effort <- suppressWarnings(as.numeric(df[[col_map$effort]]))
+  catch_vals <- suppressWarnings(as.numeric(df[[col_map$catch]]))
+  effort_vals <- suppressWarnings(as.numeric(df[[col_map$effort]]))
   
   if ("cpue" %in% names(col_map) && !is.null(col_map$cpue)) {
-    out$cpue <- suppressWarnings(as.numeric(df[[col_map$cpue]]))
+    cpue_vals <- suppressWarnings(as.numeric(df[[col_map$cpue]]))
   } else {
-    out$cpue <- out$catch / out$effort
+    cpue_vals <- catch_vals / effort_vals
   }
   
-  out
+  data.frame(
+    year = year_vals,
+    species = species_vals,
+    fleet = fleet_vals,
+    catch = catch_vals,
+    effort = effort_vals,
+    cpue = cpue_vals,
+    stringsAsFactors = FALSE
+  )
 }
 
 #' Harmonize effort values
