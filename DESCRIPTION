@@ -27,7 +27,8 @@ Imports:
     jsonlite (>= 1.8.0),
     DT (>= 0.30),
     digest (>= 0.6.0),
-    gridExtra (>= 2.3)
+    gridExtra (>= 2.3),
+    zip (>= 2.2.0)
 Suggests:
     testthat (>= 3.0.0),
     shinytest2 (>= 0.3.0),

@@ -23,6 +23,8 @@ source("R/mod_data_input.R")
 source("R/mod_audit.R")
 source("R/mod_screen.R")
 source("R/mod_explore.R")
+source("R/mod_decide.R")
+source("R/mod_report.R")
 source("R/mod_context_rail.R")
 
 #' Run DSI Studio application
@@ -88,6 +90,18 @@ dsi_studio_ui <- function() {
           title = "4. Explore",
           icon = icon("chart-line"),
           mod_explore_ui("explore")
+        ),
+        
+        nav_panel(
+          title = "5. Decide",
+          icon = icon("gavel"),
+          mod_decide_ui("decide")
+        ),
+        
+        nav_panel(
+          title = "6. Report",
+          icon = icon("file-export"),
+          mod_report_ui("report")
         )
       )
     )
@@ -131,6 +145,10 @@ dsi_studio_server <- function(input, output, session) {
   })
   
   mod_explore_server("explore", app_state)
+  
+  mod_decide_server("decide", app_state)
+  
+  mod_report_server("report", app_state)
   
   mod_context_rail_server("context", app_state)
 }
