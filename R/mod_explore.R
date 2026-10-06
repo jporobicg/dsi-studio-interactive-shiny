@@ -232,6 +232,8 @@ mod_explore_server <- function(id, app_state) {
             .score-grid-cell {
               display: inline-block;
               width: 200px;
+              min-width: 180px;
+              max-width: 250px;
               margin: 10px;
               padding: 15px;
               border-radius: 8px;
@@ -261,8 +263,15 @@ mod_explore_server <- function(id, app_state) {
               display: block;
               margin-top: 5px;
             }
+            .score-grid-container {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 10px;
+              justify-content: flex-start;
+              align-items: flex-start;
+            }
           ")),
-          cells
+          div(class = "score-grid-container", cells)
         )
       }
       
@@ -351,7 +360,7 @@ mod_explore_server <- function(id, app_state) {
                     tags$dt("DSI_v2"), tags$dd(format_dsi_score(win$dsi_v2, 1)),
                     tags$dt("Window"), tags$dd(sprintf("%d-%d", win$start_year, win$end_year)),
                     tags$dt("Usable years"), tags$dd(win$n_usable),
-                    tags$dt("β (slope)"), tags$dd(sprintf("%.4f", win$beta)),
+                    tags$dt("β (slope)"), tags$dd(sprintf("%.3g", win$beta)),
                     tags$dt("p-value"), tags$dd(format.pval(win$p_value, digits = 3))
                   )
                 )

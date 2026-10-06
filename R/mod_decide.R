@@ -108,7 +108,7 @@ mod_decide_server <- function(id, app_state) {
                   tags$dt("Eligible:"),
                   tags$dd(ifelse(row$eligible, "Yes", "No")),
                   tags$dt("β:"),
-                  tags$dd(sprintf("%.4f (p = %.3g)", row$beta, row$p_value))
+                  tags$dd(sprintf("%.3g (p = %.3g)", row$beta, row$p_value))
                 )
               )
             )
