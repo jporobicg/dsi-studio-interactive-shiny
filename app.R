@@ -8,6 +8,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(readr)
+library(echarts4r)
 
 source("R/dsicore_utils.R")
 source("R/dsicore_data.R")
@@ -51,6 +52,10 @@ dsi_studio_ui <- function() {
     tags$head(
       tags$link(rel = "stylesheet", href = "css/custom.css")
     ),
+    
+    dsi_custom_css(),
+    dsi_step_class_js(),
+    dsi_context_rail_js(),
     
     layout_sidebar(
       sidebar = sidebar(
@@ -130,6 +135,53 @@ dsi_studio_server <- function(input, output, session) {
   mod_context_rail_server("context", app_state)
 }
 
-if (!interactive()) {
-  run_dsi_studio(port = 43210)
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+## ~ Custom UI helpers ~ ##
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+
+#' Custom CSS for DSI Studio
+#' @keywords internal
+dsi_custom_css <- function() {
+  tags$style(HTML("
+    /* Additional custom styles can be added here */
+  "))
 }
+
+#' JavaScript for step class updates
+#' 
+#' [LOCAL FIX] was a bare top-level tags$script() that never reached the UI
+#' @keywords internal
+dsi_step_class_js <- function() {
+  tags$script(HTML("
+    Shiny.addCustomMessageHandler('updateStepClass', function(message) {
+      var elem = document.getElementById('step-' + message.step + '-item');
+      if (elem) {
+        elem.className = 'step-item ' + message.class;
+      }
+    });
+  "))
+}
+
+#' JavaScript for context rail updates
+#' 
+#' [LOCAL FIX] was a bare top-level tags$script() that never reached the UI
+#' @keywords internal
+dsi_context_rail_js <- function() {
+  tags$script(HTML("
+    Shiny.addCustomMessageHandler('updateContext', function(message) {
+      var elem = document.getElementById(message.id);
+      if (elem) {
+        elem.innerText = message.value;
+      }
+    });
+  "))
+}
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+## ~ App launcher ~ ##
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+
+# [LOCAL FIX] original ended with `if (!interactive()) run_dsi_studio(port = 43210)`,
+# which nests runApp() and binds 0.0.0.0 when launched via shiny::runApp(dir).
+# Return the app object so runApp(dir, host=, port=) controls the binding.
+shinyApp(ui = dsi_studio_ui(), server = dsi_studio_server)

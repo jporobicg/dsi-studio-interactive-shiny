@@ -68,7 +68,7 @@ mod_explore_server <- function(id, app_state) {
         
         best_dsi <- best$dsi_v2[1]
         band <- get_dsi_band(best_dsi)
-        bg_color <- switch(band,
+        bg_color <- switch(band$label,
           "Good" = "#009E73",
           "Moderate" = "#E69F00",
           "Poor" = "#D55E00",
@@ -86,7 +86,7 @@ mod_explore_server <- function(id, app_state) {
                           ns("cell_click"), grp),
           div(class = "cell-title", grp),
           div(class = "cell-score", sprintf("DSI: %.1f", best_dsi)),
-          div(class = "cell-band", band),
+          div(class = "cell-band", band$label),
           tags$canvas(
             class = "sparkline-canvas",
             `data-values` = spark_data,
@@ -260,8 +260,10 @@ mod_explore_server <- function(id, app_state) {
         e_charts(component) %>%
         e_bar(score, 
              itemStyle = list(color = "#3498DB"),
-             label = list(show = TRUE, position = "right", formatter = "{c}")) %>%
-        e_y_axis(max = 1) %>%
+             label = list(show = TRUE, position = "right", 
+                         formatter = htmlwidgets::JS("function(p) { var v = Array.isArray(p.value) ? p.value[0] : p.value; return Number(v).toFixed(2); }"))) %>%
+        e_y_axis(max = 1, splitLine = list(lineStyle = list(color = "#F0F0F0"))) %>%
+        e_x_axis(axisLabel = list(fontSize = 11)) %>%
         e_flip_coords() %>%
         e_grid(left = "20%", right = "15%") %>%
         e_tooltip(trigger = "axis") %>%
@@ -309,15 +311,17 @@ mod_explore_server <- function(id, app_state) {
         e_toolbox_feature(feature = "dataZoom") %>%
         e_toolbox_feature(feature = "restore") %>%
         e_toolbox_feature(feature = "saveAsImage") %>%
-        e_legend(top = "5%") %>%
-        e_grid(top = "15%", bottom = "20%") %>%
+        e_legend(top = "3%") %>%
+        e_grid(top = "12%", bottom = "15%", left = "8%", right = "5%") %>%
         e_mark_area(
-          data = list(list(
+          data = list(
             list(xAxis = win$start_year),
             list(xAxis = win$end_year)
-          )),
-          itemStyle = list(color = "rgba(52, 152, 219, 0.2)")
-        )
+          ),
+          itemStyle = list(color = "rgba(52, 152, 219, 0.15)")
+        ) %>%
+        e_x_axis(axisLabel = list(fontSize = 11, formatter = htmlwidgets::JS("function(v) { return String(v); }")), min = "dataMin", max = "dataMax") %>%
+        e_y_axis(axisLabel = list(fontSize = 11))
     })
     
     output$diagnostic_plot <- renderPlot({
