@@ -101,24 +101,43 @@ harmonize_effort_corrected <- function(df, effort_semantics = "per_group_year",
 #' Reproduces the original bug: takes first value per fleet-year,
 #' then applies to all species. When no fleet column, uses first 
 #' group's effort for all groups.
+#' Uses base R merge with sort=FALSE to replicate exact row ordering.
 #' 
 #' @param df Data frame with year, species, fleet, effort
 #' @return Data frame with harmonized effort (buggy)
 #' @keywords internal
 harmonize_effort_legacy <- function(df) {
-  df$effort_original <- df$effort
+  df$effort_raw <- df$effort
   
-  effort_by_fy <- df %>%
-    dplyr::group_by(year, fleet) %>%
-    dplyr::summarise(
-      effort = dplyr::first(effort[is.finite(effort)]),
-      effort_n_unique = dplyr::n_distinct(effort[is.finite(effort)]),
-      .groups = "drop"
+  df2 <- df[is.finite(df$year) & !is.na(df$fleet), c("year", "fleet", "effort"), drop = FALSE]
+  
+  f <- interaction(df2$year, df2$fleet, drop = TRUE)
+  spl <- split(df2, f)
+  
+  out_list <- lapply(spl, function(d) {
+    e <- d$effort
+    e_ok <- e[is.finite(e)]
+    e_val <- if (length(e_ok) == 0) NA_real_ else e_ok[1]
+    n_non_na <- length(e_ok)
+    n_unique <- if (length(e_ok) == 0) 0L else length(unique(e_ok))
+    data.frame(
+      year = d$year[1],
+      fleet = d$fleet[1],
+      effort_fleet_year = e_val,
+      effort_n_non_na = n_non_na,
+      effort_n_unique = n_unique,
+      stringsAsFactors = FALSE,
+      row.names = NULL
     )
+  })
   
-  df <- df %>%
-    dplyr::select(-effort) %>%
-    dplyr::left_join(effort_by_fy, by = c("year", "fleet"))
+  e_tbl <- do.call(rbind, out_list)
+  rownames(e_tbl) <- NULL
+  
+  df_tmp <- df
+  df_tmp$effort <- NULL
+  df <- merge(df_tmp, e_tbl, by = c("year", "fleet"), all.x = TRUE, sort = FALSE)
+  df$effort <- df$effort_fleet_year
   
   df$effort_conflicts <- FALSE
   df

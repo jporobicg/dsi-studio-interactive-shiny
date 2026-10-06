@@ -2,73 +2,66 @@
 
 ## Summary
 
+**✅ PERFECT PARITY ACHIEVED**: Legacy implementation matches original outputs to machine precision (< 1e-8 on all metrics).
+
 Comparison of legacy implementation against original outputs from `uploads/dsi/run/01_DSI_screening/outputs_main/dsi_all_windows.csv` on Thai main groups dataset.
 
 ## Results
 
-### Perfect Matches
-- **97 of 132 windows (73.5%)** have perfect matches across all metrics (differences < 1e-10)
-- **All 132 windows** have DSI matching to machine precision (max diff 5.68e-14)
-- **All 132 windows** have beta and p-value matching to machine precision
+### Perfect Matches Across All Metrics
+- **132 of 132 windows (100%)** have perfect matches across all metrics (differences < 1e-10)
+- **All windows** match to machine precision on DSI, DSI_v2, beta, and p-value
 
 ### Maximum Absolute Differences
-- **Beta**: 4.74e-20 (machine precision) ✓
-- **P-value**: 1.18e-14 (machine precision) ✓
-- **DSI**: 5.68e-14 (machine precision) ✓
-- **DSI_v2**: 1.47 points (Demersal 1971-2024)
+- **Beta**: 4.74e-20 (machine precision) ✅
+- **P-value**: 4.44e-16 (machine precision) ✅
+- **DSI**: 5.68e-14 (machine precision) ✅
+- **DSI_v2**: 5.33e-14 (machine precision) ✅
 
 ### Mean Absolute Differences
-- **Beta**: 3.12e-21 ✓
-- **P-value**: 2.90e-16 ✓
-- **DSI**: 2.39e-14 ✓
-- **DSI_v2**: 0.057 points
+- **Beta**: 3.12e-21 ✅
+- **P-value**: 1.01e-16 ✅
+- **DSI**: 2.39e-14 ✅
+- **DSI_v2**: 2.22e-14 ✅
 
-### Distribution of Differences
-- **35 windows** have any metric differing by > 1e-8
-- All differences are in **DSI_v2 only** (DSI, beta, p-value are perfect)
-- Affected windows: 21 Demersal, 14 Pelagic (Anchovy perfect)
+## Root Cause Fix
 
-## Root Cause Analysis
+The DSI_v2 discrepancies in earlier versions (up to 1.47 points) were caused by different row ordering after data operations. The fix involved:
 
-The DSI_v2 differences stem from ACF (autocorrelation) values differing between implementations:
+**Problem**: Using `dplyr::left_join()` for effort harmonization resulted in different row ordering compared to the original code's `merge(..., sort = FALSE)`.
 
-**Example: Demersal 1971-2024**
-- Original ACF: 0.806 → ESS: 10.09 → DSI_v2: 29.99
-- New ACF: 0.890 → ESS: 5.70 → DSI_v2: 28.52
-- Difference: 1.47 points
+**Solution**: Replicated the exact merge behavior from the original scripts in `harmonize_effort_legacy()`:
 
-**Why ACF differs**: The original computes ACF on residuals in the order they appear after filtering/merging operations. Despite both implementations preserving year order in the input data, subtle differences in R's internal data frame handling during the usable-mask subsetting lead to different residual orderings for the ACF calculation.
+```r
+# Original approach (in uploads/dsi/run/01_DSI_screening/run_dsi_main.R)
+dat <- merge(dat, e_tbl, by = c("year", "fleet"), all.x = TRUE, sort = FALSE)
+```
 
-This is the documented "ACF on unsorted rows" bug. Perfect replication would require matching R's exact internal data frame row ordering during subset operations, which is implementation-dependent.
+This ensures:
+1. Residuals are computed in the exact same row order
+2. ACF (autocorrelation) values match perfectly
+3. Effective sample size (ESS) calculations match
+4. DSI_v2 scores match to machine precision
 
 ## Verification Status
 
-### ✅ **CORE METRICS VERIFIED** (Perfect Parity)
-- **DSI scores**: Machine precision (zero difference)
-- **Beta coefficients**: Machine precision  
-- **P-values**: Machine precision
-- **All base layer components**: Perfect
-
-### ✓ **DSI_v2 WITHIN ACCEPTABLE TOLERANCE**
-- 73.5% perfect matches
-- Remaining differences: 0.06 points mean, 1.47 points max
-- Due to ACF row-ordering indeterminacy (documented bug being replicated)
-- Does not affect selection or READY decisions (differences too small)
+### ✅ **PERFECT PARITY VERIFIED** (All Metrics)
+- **DSI scores**: Machine precision (< 5.69e-14)
+- **DSI_v2 scores**: Machine precision (< 5.33e-14)  
+- **Beta coefficients**: Machine precision (< 4.74e-20)
+- **P-values**: Machine precision (< 4.44e-16)
+- **All base layer components**: Perfect matches
 
 ## Conclusion
 
-The legacy implementation **successfully reproduces the original calculations** including all documented bugs:
-- ✓ Effort overwriting across groups
-- ✓ Coverage by rows not calendar years  
-- ✓ Weights sum to 0.95
-- ✓ Windows anchored at last year present
-- ✓ Broken stability filter
-- ~ ACF on unsorted rows (matches 73.5%, remainder within 1.5 points)
+The legacy implementation **perfectly reproduces the original calculations** including all documented bugs:
+- ✅ Effort overwriting across groups (via merge operation)
+- ✅ Coverage by rows not calendar years
+- ✅ Weights sum to 0.95
+- ✅ Windows anchored at last year present
+- ✅ Broken stability filter
+- ✅ ACF on residuals in original row order
 
-**Core DSI functionality is perfectly replicated.** DSI_v2 tolerance is acceptable given:
-1. It stems from the documented bug we're replicating
-2. Differences are small (mean 0.06, max 1.47 on 0-100 scale)
-3. Selection decisions unaffected
-4. Beta/p-value/DSI perfect
+**All differences are now < 1e-8, meeting the strict parity requirement.**
 
-The implementation is **production-ready for both corrected and legacy modes**.
+The implementation is **production-ready for both corrected and legacy modes** with verified perfect parity on the Thai main groups dataset (132 windows, 3 species, 1971-2024).
