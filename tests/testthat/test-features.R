@@ -1,8 +1,6 @@
 ## Tests for the audit, effort, method-flag, robustness and formatting features.
 
-demo <- function(name = "Thai_main_groups.csv") {
-  read.csv(file.path(dsi_repo_root, "inst", "demo_data", name), stringsAsFactors = FALSE)
-}
+demo <- dsi_demo_data
 thai_map <- list(year = "year", species = "group", catch = "yield", effort = "effort", cpue = "cpue")
 thai_std <- function() {
   d <- standardize_columns(demo(), thai_map)
@@ -102,7 +100,7 @@ test_that("dsi_compare_methods attributes differences to fixes", {
 
 test_that("format_beta uses readable scientific notation", {
   suppressMessages({ library(shiny); library(bslib) })
-  sys.source(file.path(dsi_repo_root, "R", "app_theme.R"), envir = environment())
+  # format_beta is already exported by the package
   expect_equal(format_beta(-2.17e-5), "\u22122.17 \u00d7 10\u207b\u2075")
   expect_equal(format_beta(0.0123), "0.0123")
   expect_equal(format_beta(NA), "\u2014")

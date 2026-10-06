@@ -3,6 +3,7 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 #' Context rail UI
+#' @param id Module namespace id
 #' @export
 mod_context_rail_ui <- function(id) {
   ns <- NS(id)
@@ -63,6 +64,8 @@ context_strip_ui <- function(s) {
 }
 
 #' Context rail server
+#' @param id Module namespace id
+#' @param app_state Shared [shiny::reactiveValues()] holding the app state
 #' @export
 mod_context_rail_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {

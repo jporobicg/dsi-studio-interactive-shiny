@@ -3,6 +3,7 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 #' Comparison UI
+#' @param id Module namespace id
 #' @export
 mod_compare_ui <- function(id) {
   ns <- NS(id)
@@ -16,6 +17,8 @@ mod_compare_ui <- function(id) {
 }
 
 #' Comparison server
+#' @param id Module namespace id
+#' @param app_state Shared [shiny::reactiveValues()] holding the app state
 #' @export
 mod_compare_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {

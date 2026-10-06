@@ -19,6 +19,7 @@ window_eligibility <- function(m, opts = default_selection_opts()) {
 }
 
 #' Explore UI
+#' @param id Module namespace id
 #' @export
 mod_explore_ui <- function(id) {
   ns <- NS(id)
@@ -38,6 +39,8 @@ mod_explore_ui <- function(id) {
 }
 
 #' Explore server
+#' @param id Module namespace id
+#' @param app_state Shared [shiny::reactiveValues()] holding the app state
 #' @export
 mod_explore_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {

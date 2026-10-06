@@ -1,10 +1,11 @@
-## Source the DSI core directly (the app is not installed as a package).
-## testthat runs helpers with the working directory set to tests/testthat.
-local({
-  root <- normalizePath(file.path(getwd(), "..", ".."))
-  if (!file.exists(file.path(root, "R", "dsicore_workflow.R"))) root <- normalizePath(".")
-  suppressMessages({ library(dplyr); library(tidyr) })
-  for (f in sort(list.files(file.path(root, "R"), pattern = "^dsicore_.*[.]R$", full.names = TRUE)))
-    sys.source(f, envir = globalenv())
-  assign("dsi_repo_root", root, envir = globalenv())
-})
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+## ~ Test helper for dsiStudio package          ~ ##
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+
+## Loads a demo dataset shipped in inst/demo_data. system.file() resolves to
+## the installed package, or to the source tree under devtools::test().
+dsi_demo_data <- function(name = "Thai_main_groups.csv") {
+  path <- system.file("demo_data", name, package = "dsiStudio")
+  if (!nzchar(path) || !file.exists(path)) stop("Demo data file not found: ", name)
+  read.csv(path, stringsAsFactors = FALSE)
+}

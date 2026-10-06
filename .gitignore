@@ -1,4 +1,12 @@
-parity/parity_*_vs_*.csv
-parity/parity_main*.csv
-parity/parity_species*.csv
+# R session files
 .Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# Build and check artifacts
+*.Rcheck/
+*.tar.gz
+
+# OS files
+.DS_Store

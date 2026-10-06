@@ -246,10 +246,10 @@ interpret_window <- function(metrics, group_name = NULL) {
   parts <- c(parts, sprintf("%d usable years", metrics$n_usable))
   
   if (metrics$beta < 0 && !is.na(metrics$p_value)) {
-    parts <- c(parts, sprintf("CPUE falls as effort rises (β = %.3f, p = %.3f)",
+    parts <- c(parts, sprintf("CPUE falls as effort rises (\u03b2 = %.3f, p = %.3f)",
                              metrics$beta, metrics$p_value))
   } else if (metrics$beta >= 0) {
-    parts <- c(parts, "WARNING: positive slope (β >= 0)")
+    parts <- c(parts, "WARNING: positive slope (\u03b2 >= 0)")
   }
   
   parts <- c(parts, sprintf("Effort contrast: %.1fx mean; CPUE contrast: %.1fx",

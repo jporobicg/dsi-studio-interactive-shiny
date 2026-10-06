@@ -1,16 +1,17 @@
-Package: dsiapp
+Package: dsiStudio
 Title: DSI Studio - Data Suitability Index Screening Tool
 Version: 0.1.0
 Authors@R: c(
-    person("Javier", "Porobic", role = c("aut", "cre"), email = "javier@example.com")
+    person("Javier", "Porobic", role = c("aut", "cre"), email = "jporobicg@gmail.com")
   )
 Description: Interactive Shiny application for screening fisheries catch/effort data
     using the Data Suitability Index (DSI). Scores time windows for suitability in
     Fox/Schaefer surplus production models.
 License: MIT + file LICENSE
+URL: https://github.com/jporobicg/dsi-studio-interactive-shiny
+BugReports: https://github.com/jporobicg/dsi-studio-interactive-shiny/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
 Depends:
     R (>= 4.1.0)
 Imports:
@@ -28,9 +29,15 @@ Imports:
     DT (>= 0.30),
     digest (>= 0.6.0),
     gridExtra (>= 2.3),
-    zip (>= 2.2.0)
+    zip (>= 2.2.0),
+    htmltools,
+    base64enc,
+    graphics,
+    stats,
+    utils
 Suggests:
     testthat (>= 3.0.0),
     shinytest2 (>= 0.3.0),
-    vdiffr (>= 1.0.0)
+    chromote
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.0

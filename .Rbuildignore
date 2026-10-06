@@ -1,0 +1,10 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.git$
+^\.github$
+^\.gitignore$
+^Dockerfile$
+^app\.R$
+^.*\.Rcheck$
+^.*\.tar\.gz$
+^LICENSE\.md$
