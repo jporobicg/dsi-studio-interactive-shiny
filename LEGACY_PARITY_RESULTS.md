@@ -1,67 +1,41 @@
-# Legacy Parity Verification Results
+# Legacy Parity Verification
 
-## Summary
+Run from the repository root:
 
-**✅ PERFECT PARITY ACHIEVED**: Legacy implementation matches original outputs to machine precision (< 1e-8 on all metrics).
-
-Comparison of legacy implementation against original outputs from `uploads/dsi/run/01_DSI_screening/outputs_main/dsi_all_windows.csv` on Thai main groups dataset.
-
-## Results
-
-### Perfect Matches Across All Metrics
-- **132 of 132 windows (100%)** have perfect matches across all metrics (differences < 1e-10)
-- **All windows** match to machine precision on DSI, DSI_v2, beta, and p-value
-
-### Maximum Absolute Differences
-- **Beta**: 4.74e-20 (machine precision) ✅
-- **P-value**: 4.44e-16 (machine precision) ✅
-- **DSI**: 5.68e-14 (machine precision) ✅
-- **DSI_v2**: 5.33e-14 (machine precision) ✅
-
-### Mean Absolute Differences
-- **Beta**: 3.12e-21 ✅
-- **P-value**: 1.01e-16 ✅
-- **DSI**: 2.39e-14 ✅
-- **DSI_v2**: 2.22e-14 ✅
-
-## Root Cause Fix
-
-The DSI_v2 discrepancies in earlier versions (up to 1.47 points) were caused by different row ordering after data operations. The fix involved:
-
-**Problem**: Using `dplyr::left_join()` for effort harmonization resulted in different row ordering compared to the original code's `merge(..., sort = FALSE)`.
-
-**Solution**: Replicated the exact merge behavior from the original scripts in `harmonize_effort_legacy()`:
-
-```r
-# Original approach (in uploads/dsi/run/01_DSI_screening/run_dsi_main.R)
-dat <- merge(dat, e_tbl, by = c("year", "fleet"), all.x = TRUE, sort = FALSE)
+```bash
+Rscript tools/check_legacy_parity.R
 ```
 
-This ensures:
-1. Residuals are computed in the exact same row order
-2. ACF (autocorrelation) values match perfectly
-3. Effective sample size (ESS) calculations match
-4. DSI_v2 scores match to machine precision
+The script runs Javier's **original scripts live** (`uploads/dsi/src/run_dsi_main.R` and
+`run_dsi_species_fleet.R`, copied into a temp dir together with `R/functions_dsi.R` and the
+example data), also loads the reference CSVs shipped in `uploads/dsi/run/01_DSI_screening/`,
+and compares both against `run_dsi_workflow(method = "legacy")`. It exits non-zero on failure.
 
-## Verification Status
+## Result (2026-10-06)
 
-### ✅ **PERFECT PARITY VERIFIED** (All Metrics)
-- **DSI scores**: Machine precision (< 5.69e-14)
-- **DSI_v2 scores**: Machine precision (< 5.33e-14)  
-- **Beta coefficients**: Machine precision (< 4.74e-20)
-- **P-values**: Machine precision (< 4.44e-16)
-- **All base layer components**: Perfect matches
+| Case | Original windows | App windows | Matched (all of valid, beta, p, DSI, DSI_v2 within 1e-8) | max abs diff DSI_v2 |
+|---|---|---|---|---|
+| Main groups, live original run | 132 | 132 | 132 / 132 | 5.33e-14 |
+| Main groups, shipped reference CSV | 132 | 132 | 132 / 132 | 5.33e-14 |
+| Species x fleet, live original run | 493 | 493 | 493 / 493 | 5.15e-14 |
+| Species x fleet, shipped reference CSV | 493 | 493 | 493 / 493 | 5.15e-14 |
 
-## Conclusion
+Summary table: `parity/parity_summary.csv`.
 
-The legacy implementation **perfectly reproduces the original calculations** including all documented bugs:
-- ✅ Effort overwriting across groups (via merge operation)
-- ✅ Coverage by rows not calendar years
-- ✅ Weights sum to 0.95
-- ✅ Windows anchored at last year present
-- ✅ Broken stability filter
-- ✅ ACF on residuals in original row order
+## About the "0 vs 132" result reported in VERIFICATION_REPORT.md
 
-**All differences are now < 1e-8, meeting the strict parity requirement.**
+That number did not come from the legacy implementation. It was not a regression either. It came from a broken ad-hoc check:
 
-The implementation is **production-ready for both corrected and legacy modes** with verified perfect parity on the Thai main groups dataset (132 windows, 3 species, 1971-2024).
+1. The one-liner in VERIFICATION_REPORT.md ran `method = "corrected"`, not `"legacy"`, so it
+   was never comparable to the legacy reference output.
+2. It printed `nrow(result$summary)`, but `run_dsi_workflow()` returns no `summary` element
+   (it returns `data_std, audit, windows, dsi_all, dsi_best, config`). `nrow(NULL)` is `NULL`,
+   `sprintf("%d", NULL)` is `character(0)`, so nothing was printed and that was read as "0".
+   The same call actually produces 132 windows (132 valid) in `result$dsi_all`.
+3. The old `check_legacy_parity.R` could never run. It `setwd()`'d into `uploads/dsi/src`,
+   called `standardize_columns()`, which does not exist in the original `functions_dsi.R`, and
+   `setwd(".")` would not have returned to the repo root anyway. The committed
+   `parity_check_output.txt` was a truncated log of that ad-hoc corrected-method run.
+
+The old `check_legacy_parity_v2.R`, which compares against the shipped CSV, gave 132/132 at every commit
+from 3350d0e to b992ee0. Both old scripts are replaced by `tools/check_legacy_parity.R`.

@@ -156,7 +156,7 @@ Error in `startup()`:
 | 4. HTML report export | ❌ NOT DONE | ❌ N/A |
 | (a) Headless Shiny + curl | — | ✅ VERIFIED |
 | (b) Testthat suite | ✅ FIXED | ✅ 26 PASS |
-| (c) Parity check | ✅ FIXED | ✅ RUN (0 vs 132) |
+| (c) Parity check | ✅ FIXED | ✅ 132/132 (the "0 vs 132" was a broken ad-hoc check; see LEGACY_PARITY_RESULTS.md) |
 | (d) Chromote screenshots | — | ❌ FAILED (Chrome won't launch) |
 
 ---

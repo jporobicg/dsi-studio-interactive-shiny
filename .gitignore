@@ -1,0 +1,4 @@
+parity/parity_*_vs_*.csv
+parity/parity_main*.csv
+parity/parity_species*.csv
+.Rhistory
