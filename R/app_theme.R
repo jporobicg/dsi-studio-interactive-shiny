@@ -270,16 +270,28 @@ dsi_custom_css <- function() {
     .win-range .irs { margin-top: -6px; }
     .compare-scores { display: flex; gap: 22px; align-items: baseline; flex-wrap: wrap; }
     .compare-scores .big { font-size: 30px; font-weight: 700; }
-    .dsi-advanced { border: 1px solid #E8E8E8; border-radius: 8px; padding: 0; margin: 16px 0 6px; background: #FCFCFD; }
-    .dsi-advanced > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; list-style: none; display: flex; justify-content: space-between; gap: 8px; }
+    .adv-launch { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding: 10px 14px; border: 1px dashed #D6DCE1; border-radius: 8px; background: #FCFCFD; font-size: 13.5px; }
+    .adv-launch-title { font-weight: 600; }
+    .adv-launch-link { margin-left: auto; font-weight: 600; text-decoration: none; }
+    .dsi-advanced { padding: 0; }
+    .dsi-advanced > summary { cursor: pointer; padding: 16px 22px; font-weight: 600; font-size: 16px; list-style: none; display: flex; align-items: center; gap: 10px; }
     .dsi-advanced > summary::-webkit-details-marker { display: none; }
-    .dsi-advanced > summary::before { content: '\\25B8'; margin-right: 8px; color: #3498DB; transition: transform .15s; display: inline-block; }
+    .dsi-advanced > summary::before { content: '\\25B8'; color: #3498DB; transition: transform .15s; display: inline-block; }
+    .dsi-advanced[open] > summary { border-bottom: 1px solid #EEF0F2; }
     .dsi-advanced[open] > summary::before { transform: rotate(90deg); }
-    .dsi-advanced .adv-body { padding: 4px 16px 16px; }
-    .adv-group h6 { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: #7F8C8D; margin: 14px 0 6px; font-weight: 600; }
-    .adv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0 14px; }
-    .adv-grid .form-group, .adv-grid .shiny-input-container { margin-bottom: 8px; width: 100% !important; }
-    .adv-grid label { font-size: 12px; font-weight: 500; }
+    .dsi-advanced .adv-body { padding: 14px 22px 20px; }
+    .adv-intro { font-size: 13.5px; color: #666; margin: 0 0 14px; max-width: 760px; }
+    .adv-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 28px; }
+    .adv-section { border: 1px solid #EEF0F2; border-radius: 8px; padding: 14px 16px 8px; background: #FCFCFD; }
+    .adv-section h4 { font-size: 14px; font-weight: 700; margin: 0 0 4px; color: #2C3E50; }
+    .adv-help { font-size: 12.5px; color: #7F8C8D; margin: 0 0 10px; }
+    .adv-row .form-group, .adv-row .shiny-input-container { display: grid; grid-template-columns: minmax(0, 1fr) 112px; align-items: center; gap: 4px 14px; width: 100% !important; margin: 0; padding: 7px 0; border-top: 1px solid #F1F3F5; }
+    .adv-row:first-child .form-group { border-top: 0; }
+    .adv-row label { margin: 0; font-size: 13.5px; font-weight: 500; line-height: 1.3; }
+    .adv-label { display: block; color: #2C3E50; }
+    .adv-default { display: block; font-size: 11.5px; color: #95A5A6; font-weight: 400; font-family: 'IBM Plex Mono', monospace; }
+    .adv-row input.form-control { text-align: right; font-variant-numeric: tabular-nums; padding: 5px 8px; height: auto; }
+    .adv-footer { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid #EEF0F2; }
     .fix-table td, .fix-table th { font-size: 13px; vertical-align: top; }
     .decide-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
     .decide-card { padding: 18px 22px; }
@@ -334,6 +346,12 @@ dsi_custom_css <- function() {
       .dataTables_wrapper .dataTables_paginate .page-link { padding: 4px 8px; }
       .dataTables_wrapper .dataTables_filter { float: none; text-align: left; }
       #shiny-notification-panel { max-width: calc(100vw - 16px); right: 8px; left: auto; }
+      .adv-sections { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+      .dsi-advanced > summary { padding: 14px 14px; font-size: 15px; }
+      .dsi-advanced .adv-body { padding: 12px 12px 16px; }
+      .adv-section { padding: 12px 12px 6px; }
+      .adv-row .form-group, .adv-row .shiny-input-container { grid-template-columns: minmax(0, 1fr) 92px; gap: 4px 10px; }
+      .adv-footer { justify-content: stretch; } .adv-footer .btn { flex: 1 1 100%; }
     }
   "))
 }

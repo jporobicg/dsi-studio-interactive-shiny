@@ -46,23 +46,49 @@ dsi_param_spec <- function() {
              step = vapply(rows, function(x) as.numeric(x[[5]]), 0), stringsAsFactors = FALSE)
 }
 
+#' Sections of the Advanced parameters panel
+#'
+#' Display grouping only: the spec groups (used to build refs, weights and
+#' selection options) are unchanged.
+#' @keywords internal
+dsi_param_sections <- function() {
+  list(
+    list(id = "weights", title = "Score weights", groups = "weights",
+         help = "Relative weight of each component in DSI. Corrected defaults sum to 1; the Legacy profile always uses the original weights (sum 0.95)."),
+    list(id = "thresholds", title = "Scoring thresholds", groups = "refs",
+         help = "Reference points that map each metric to a 0\u20131 component score."),
+    list(id = "window_rules", title = "Window rules", groups = c("validity", "selection"),
+         help = "Which windows are valid, which are eligible to be suggested, and when a group is READY."),
+    list(id = "penalties", title = "Penalties (DSI_v2)", groups = "penalties",
+         help = "Robustness multipliers applied on top of DSI to give DSI_v2.")
+  )
+}
+
+#' @keywords internal
+.adv_label <- function(x) { x <- sub("^Weight: ", "", x); paste0(toupper(substr(x, 1, 1)), substring(x, 2)) }
+
+#' @keywords internal
+.fmt_default <- function(x) format(x, trim = TRUE, drop0trailing = TRUE, scientific = FALSE)
+
 #' Screen UI
 #' @export
 mod_screen_ui <- function(id) {
   ns <- NS(id)
   spec <- dsi_param_spec()
-  group_titles <- c(weights = "Score weights", validity = "Window validity", refs = "Reference points",
-                    penalties = "Penalties (DSI_v2)", selection = "Eligibility and READY rules")
-  adv_groups <- lapply(names(group_titles), function(g) {
-    sp <- spec[spec$group == g, ]
-    div(class = "adv-group",
-      h6(group_titles[[g]]),
-      if (g == "weights") div(class = "muted", style = "font-size:12px;margin-bottom:6px;",
-                              "Corrected defaults sum to 1. The Legacy profile always uses the original weights (sum 0.95)."),
-      div(class = "adv-grid", lapply(seq_len(nrow(sp)), function(i)
-        numericInput(ns(paste0("p_", sp$id[i])), sp$label[i], value = sp$default[i], step = sp$step[i]))),
-      if (g == "weights") uiOutput(ns("weight_sum")))
+  adv_sections <- lapply(dsi_param_sections(), function(sec) {
+    sp <- spec[spec$group %in% sec$groups, ]
+    tags$section(class = "adv-section", id = ns(paste0("adv-", sec$id)),
+      tags$h4(sec$title),
+      p(class = "adv-help", sec$help),
+      div(class = "adv-rows", lapply(seq_len(nrow(sp)), function(i)
+        div(class = "adv-row",
+          numericInput(ns(paste0("p_", sp$id[i])),
+                       tagList(span(class = "adv-label", .adv_label(sp$label[i])),
+                               span(class = "adv-default", paste("default", .fmt_default(sp$default[i])))),
+                       value = sp$default[i], step = sp$step[i])))),
+      if (sec$id == "weights") uiOutput(ns("weight_sum")))
   })
+  open_js <- sprintf("var d=document.getElementById('%s'); d.open=true; d.scrollIntoView({block:'start'}); return false;", ns("advanced"))
   tagList(
     step_header("Score all candidate windows",
       "Every group gets one score per candidate window (start year to end year). The best eligible window is suggested and marked READY if it passes the READY rules.",
@@ -83,16 +109,22 @@ mod_screen_ui <- function(id) {
                                 "Free start and end (all windows)" = "free"),
                     selected = "last_usable_year", width = "100%"),
         uiOutput(ns("effort_line")),
-        tags$details(class = "dsi-advanced", id = ns("advanced"),
-          tags$summary(span("Advanced parameters"), uiOutput(ns("adv_badge"), inline = TRUE)),
-          div(class = "adv-body",
-            p(class = "muted", style = "font-size:12.5px;margin:6px 0 0;",
-              "Defaults are those of the corrected method. Change them only for a documented sensitivity analysis. They are saved in the export."),
-            adv_groups,
-            actionButton(ns("reset_params"), "Reset to defaults", class = "btn-outline-secondary btn-sm mt-2"))),
+        div(class = "adv-launch",
+          span(class = "adv-launch-title", "Advanced parameters"), uiOutput(ns("adv_badge2"), inline = TRUE),
+          tags$a(href = "#", class = "adv-launch-link", id = ns("open_advanced"), onclick = open_js, "Review / edit \u2193")),
         actionButton(ns("run_screen"), "Run screening", icon = icon("play"), class = "btn-primary w-100 mt-3")),
       dsi_card(title = "Results", uiOutput(ns("stale_note")), uiOutput(ns("results_summary")))
     ),
+    tags$details(class = "dsi-card dsi-advanced", id = ns("advanced"),
+      tags$summary(span(class = "adv-summary-title", "Advanced parameters"), uiOutput(ns("adv_badge"), inline = TRUE)),
+      div(class = "adv-body",
+        p(class = "adv-intro",
+          "Defaults are those of the corrected method. Change them only for a documented sensitivity analysis; changed values are highlighted and saved in the export."),
+        div(class = "adv-sections", adv_sections),
+        uiOutput(ns("adv_mod_css")),
+        div(class = "adv-footer",
+          actionButton(ns("reset_params"), "Reset to defaults", icon = icon("rotate-left"), class = "btn-outline-secondary"),
+          actionButton(ns("run_screen2"), "Run screening with these settings", icon = icon("play"), class = "btn-primary")))),
     uiOutput(ns("next_ui"))
   )
 }
@@ -131,10 +163,17 @@ mod_screen_server <- function(id, app_state) {
     modified <- reactive({
       p <- params(); spec$id[abs(unlist(p) - spec$default) > 1e-12]
     })
-    output$adv_badge <- renderUI({
+    adv_badge_ui <- function() {
       m <- modified()
-      if (length(m)) span(class = "badge-pill badge-mod", sprintf("%d changed", length(m)))
+      if (length(m)) span(class = "badge-pill badge-mod", title = paste(m, collapse = ", "), sprintf("%d changed", length(m)))
       else span(class = "muted", style = "font-weight:400;font-size:12px;", "defaults")
+    }
+    output$adv_badge <- renderUI(adv_badge_ui())
+    output$adv_badge2 <- renderUI(adv_badge_ui())
+    output$adv_mod_css <- renderUI({
+      m <- modified()
+      if (length(m)) tags$style(paste0(sprintf("#%s", ns(paste0("p_", m))), collapse = ", ") |>
+                                  paste("{ border-color: #E69F00; background: #FFF8E6; font-weight: 600; }"))
     })
     output$weight_sum <- renderUI({
       p <- params(); s <- p$w_slope + p$w_e + p$w_i + p$w_n + p$w_ce
@@ -159,7 +198,9 @@ mod_screen_server <- function(id, app_state) {
         modified_params = modified())
     })
 
-    observeEvent(input$run_screen, {
+    observeEvent(input$run_screen, run_screening())
+    observeEvent(input$run_screen2, run_screening())
+    run_screening <- function() {
       req(app_state$data_raw, app_state$col_map)
       st <- current_settings()
       if (is.na(st$min_n) || is.na(st$max_n) || st$min_n > st$max_n) {
@@ -182,7 +223,7 @@ mod_screen_server <- function(id, app_state) {
       app_state$dsi_results <- res
       mark_done(app_state, "screen")
       showNotification(sprintf("Screening complete: %d windows.", nrow(res$dsi_all)), type = "message")
-    })
+    }
 
     output$stale_note <- renderUI({
       req(app_state$screen_settings)
