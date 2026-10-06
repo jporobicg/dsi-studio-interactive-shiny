@@ -476,7 +476,7 @@ mod_explore_server <- function(id, app_state) {
           itemStyle = list(color = "rgba(52, 152, 219, 0.15)")
         ) %>%
         e_x_axis(axisLabel = list(fontSize = 11, formatter = htmlwidgets::JS("function(v) { return String(v); }")), min = "dataMin", max = "dataMax") %>%
-        e_title("Time Series (with separate axes)", left = "center", top = "0%")
+        e_title("Time Series (drag slider to change window)", left = "center", top = "0%")
     })
     
     output$diagnostic_plot <- renderPlot({
