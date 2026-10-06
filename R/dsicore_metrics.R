@@ -215,7 +215,7 @@ compute_window_metrics_corrected <- function(df, start_year, end_year,
   
   s_e <- clamp01(ec / refs$ec_ref)
   s_i <- clamp01(log(ic) / log(refs$ic_ref))
-  s_n <- clamp01((n_usable - refs$n_min_score) / (refs$n_full_score - refs$n_min_score))
+  s_n <- clamp01((n_usable - 8) / 12)
   s_ce <- clamp01((rho_ce + 1) / 2)
   
   result$s_slope <- s_slope
@@ -227,7 +227,7 @@ compute_window_metrics_corrected <- function(df, start_year, end_year,
   s_cov <- clamp01((frac_usable - refs$cov_min) / (1 - refs$cov_min))
   result$s_cov <- s_cov
   
-  s_ess <- clamp01((ess - refs$ess_min) / (refs$ess_full - refs$ess_min))
+  s_ess <- clamp01((ess - 6) / 14)
   result$s_ess <- s_ess
   
   p_out <- 1 - clamp01(f_out / refs$outlier_cap)
@@ -416,7 +416,7 @@ compute_window_metrics_legacy <- function(df, start_year, end_year,
   
   s_e <- clamp01(ec / refs$ec_ref)
   s_i <- clamp01(log(ic) / log(refs$ic_ref))
-  s_n <- clamp01((n_usable - refs$n_min_score) / (refs$n_full_score - refs$n_min_score))
+  s_n <- clamp01((n_usable - 8) / 12)
   s_ce <- clamp01((rho_ce + 1) / 2)
   
   result$s_slope <- s_slope
@@ -428,7 +428,7 @@ compute_window_metrics_legacy <- function(df, start_year, end_year,
   s_cov <- clamp01((frac_usable - refs$cov_min) / (1 - refs$cov_min))
   result$s_cov <- s_cov
   
-  s_ess <- clamp01((ess - refs$ess_min) / (refs$ess_full - refs$ess_min))
+  s_ess <- clamp01((ess - 6) / 14)
   result$s_ess <- s_ess
   
   p_out <- 1 - clamp01(f_out / refs$outlier_cap)

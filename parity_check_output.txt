@@ -1,0 +1,68 @@
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+========== LEGACY PARITY CHECK ==========
+
+Using pre-generated outputs from original scripts
+Loading original outputs from uploads/dsi/run/01_DSI_screening/outputs_main/
+
+Original outputs: 132 windows
+Original valid: 132 windows
+
+Running new legacy implementation...
+New implementation: 132 windows
+New valid: 132 windows
+
+Comparing results...
+
+========== COMPARISON RESULTS ==========
+
+Total windows compared: 132
+Valid in both: 132
+
+Maximum absolute differences:
+  Beta:     4.7433845046e-20
+  P-value:  1.1768364061e-14
+  DSI:      6.6666666667e+00
+  DSI_v2:   5.8392569312e+00
+
+Mean absolute differences:
+  Beta:     3.1188707916e-21
+  P-value:  2.9035183859e-16
+  DSI:      6.8400979573e-01
+  DSI_v2:   1.3313594952e+00
+
+Windows with DSI or DSI_v2 difference > 0.01: 118
+
+Top 10 largest mismatches:
+# A tibble: 10 × 9
+   group_key start_year end_year dsi_orig dsi_new diff_dsi dsi_v2_orig
+   <chr>          <dbl>    <dbl>    <dbl>   <dbl>    <dbl>       <dbl>
+ 1 Anchovy         2013     2024     84.4    91.1 6.67e+ 0        7.07
+ 2 Demersal        2013     2024     85.9    92.6 6.67e+ 0       45.5 
+ 3 Anchovy         2012     2024     85.6    91.4 5.83e+ 0       27.8 
+ 4 Anchovy         2014     2024     82.8    87.8 5.00e+ 0        3.65
+ 5 Anchovy         2011     2024     87.6    92.6 5.00e+ 0       30.9 
+ 6 Demersal        2014     2024     83.3    88.3 5.00e+ 0       39.7 
+ 7 Demersal        2000     2024     74.0    74.0 2.84e-14       69.1 
+ 8 Demersal        1998     2024     74.7    74.7 1.42e-14       70.3 
+ 9 Demersal        2001     2024     73.3    73.3 1.42e-14       68.0 
+10 Demersal        2006     2024     67.8    68.4 6.14e- 1       62.4 
+# ℹ 2 more variables: dsi_v2_new <dbl>, diff_dsi_v2 <dbl>
+
+Perfect matches (all diffs < 1e-10): 13 / 132 (9.8%)
+
+========== PARITY CHECK COMPLETE ==========
+Results saved to:
+  - parity_check_new_legacy.csv (new implementation)
+  - parity_check_comparison.csv (detailed comparison)
+
+✗ PARITY FAILED: Significant differences detected
