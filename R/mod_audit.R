@@ -1,116 +1,72 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-## ~ Module: Audit ~ ##
+## ~ Module: Audit                               ~ ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
+.audit_titles <- c(
+  duplicates = "Duplicate rows",
+  effort_conflicts = "Effort conflicts",
+  cpue_unit_scale = "CPUE unit scale",
+  cpue_not_catch_over_effort = "CPUE is not catch / effort",
+  effort_differs_within_fleet_year = "Effort differs between groups",
+  trailing_missing = "Trailing years without usable CPUE"
+)
+
 #' Audit UI
-#' 
-#' @param id Module ID
 #' @export
 mod_audit_ui <- function(id) {
   ns <- NS(id)
-  
   tagList(
-    h3("Data Quality Audit"),
-    
-    uiOutput(ns("audit_content"))
+    step_header("Review data quality",
+      "Checks on the mapped data before scoring. Warnings need a look. Info items explain how the data will be read.",
+      number = 2),
+    uiOutput(ns("audit_content")),
+    div(class = "step-footer", next_step_button("screen", "Continue to Screen"))
   )
 }
 
 #' Audit server
-#' 
-#' @param id Module ID
-#' @param app_state Application state
 #' @export
 mod_audit_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {
-    
-    audit_results <- reactive({
-      req(app_state$data_std)
-      
-      audit_data(app_state$data_std, app_state$group_cols)
-    })
-    
+    ns <- session$ns
     output$audit_content <- renderUI({
-      req(app_state$data_std)
-      
-      ns <- session$ns
-      audit <- audit_results()
-      
+      if (is.null(app_state$data_std)) return(div(class = "callout", "Map your data in step 1 first."))
+      audit <- app_state$audit %||% list()
+      ds <- app_state$data_std
+      gk <- make_group_key(ds, app_state$group_cols)
+      overview <- dsi_card(title = "Overview",
+        div(class = "metric-row",
+          metric_box(format(nrow(ds), big.mark = ","), "Rows"),
+          metric_box(length(unique(gk)), "Groups"),
+          metric_box(sprintf("%d\u2013%d", min(ds$year, na.rm = TRUE), max(ds$year, na.rm = TRUE)), "Years"),
+          metric_box(sum(!is.finite(ds$cpue) | ds$cpue <= 0, na.rm = TRUE), "Unusable CPUE"),
+          metric_box(sum(!is.finite(ds$effort)), "Missing effort")))
       if (length(audit) == 0) {
-        return(card(
-          card_body(
-            div(
-              class = "alert alert-success",
-              icon("check-circle"),
-              " No data quality issues detected. Ready to proceed!"
-            )
-          )
-        ))
+        return(tagList(overview, div(class = "callout ok", "No data quality issues detected.")))
       }
-      
-      finding_cards <- lapply(names(audit), function(finding_name) {
-        finding <- audit[[finding_name]]
-        
-        severity_class <- switch(
-          finding$severity,
-          "warning" = "audit-finding warning",
-          "error" = "audit-finding warning",
-          "audit-finding info"
-        )
-        
-        div(
-          class = severity_class,
-          h5(finding_name),
-          p(finding$message),
-          if (!is.null(finding$data) && nrow(finding$data) > 0) {
-            tagList(
-              # [LOCAL FIX 2] details()/summary() are not functions; use tags$
-              tags$details(
-                tags$summary("Show details"),
-                DT::dataTableOutput(ns(paste0("audit_table_", finding_name)))
-              )
-            )
-          }
-        )
+      sev <- vapply(audit, function(x) x$severity, "")
+      ord <- order(sev != "warning")
+      cards <- lapply(names(audit)[ord], function(nm) {
+        f <- audit[[nm]]
+        div(class = paste("audit-finding", if (f$severity %in% c("warning", "error")) "warning" else "info"),
+          id = paste0("audit-", nm),
+          h5(paste0(.audit_titles[[nm]] %||% nm, " \u00b7 ", f$severity)),
+          p(f$message),
+          if (!is.null(f$data) && nrow(f$data) > 0)
+            tags$details(tags$summary(style = "cursor:pointer;font-size:13px;", sprintf("Show details (%d rows)", nrow(f$data))),
+                         DT::dataTableOutput(ns(paste0("tbl_", nm)))))
       })
-      
-      card(
-        card_header("Audit Findings"),
-        card_body(
-          do.call(tagList, finding_cards)
-        )
-      )
+      tagList(overview,
+        dsi_card(title = sprintf("Findings: %d warning%s, %d info", sum(sev == "warning"),
+                                 if (sum(sev == "warning") == 1) "" else "s", sum(sev != "warning")), cards))
     })
-    
     observe({
-      audit <- audit_results()
-      
-      for (finding_name in names(audit)) {
-        finding <- audit[[finding_name]]
-        
-        local({
-          fn <- finding_name
-          fd <- finding$data
-          
-          output[[paste0("audit_table_", fn)]] <- DT::renderDataTable({
-            if (!is.null(fd) && nrow(fd) > 0) {
-              DT::datatable(
-                fd,
-                options = list(
-                  pageLength = 5,
-                  scrollX = TRUE,
-                  dom = 'tp'
-                ),
-                rownames = FALSE
-              )
-            }
-          })
-        })
-      }
-    })
-    
-    observeEvent(app_state$data_std, {
-      app_state$audit <- audit_results()
+      audit <- app_state$audit %||% list()
+      for (nm in names(audit)) local({
+        n <- nm; d <- audit[[nm]]$data
+        output[[paste0("tbl_", n)]] <- DT::renderDataTable(
+          DT::datatable(d, rownames = FALSE, options = list(pageLength = 5, scrollX = TRUE, dom = "tp")))
+      })
     })
   })
 }

@@ -1,5 +1,5 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-## ~ DSI Studio: Main Application (Step Rail) ~ ##
+## ~ DSI Studio: main application (step rail)    ~ ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 library(shiny)
@@ -10,370 +10,137 @@ library(ggplot2)
 library(readr)
 library(echarts4r)
 
-source("R/dsicore_utils.R")
-source("R/dsicore_data.R")
-source("R/dsicore_windows.R")
-source("R/dsicore_metrics.R")
-source("R/dsicore_scoring.R")
-source("R/dsicore_selection.R")
-source("R/dsicore_workflow.R")
-source("R/app_theme.R")
-source("R/app_utils.R")
-source("R/mod_data_input.R")
-source("R/mod_audit.R")
-source("R/mod_screen.R")
-source("R/mod_explore.R")
-source("R/mod_decide.R")
-source("R/mod_report.R")
-source("R/mod_context_rail.R")
+for (f in c("dsicore_utils", "dsicore_data", "dsicore_windows", "dsicore_metrics", "dsicore_scoring",
+            "dsicore_selection", "dsicore_methods", "dsicore_workflow", "dsicore_robustness",
+            "app_theme", "app_utils", "app_state", "app_report_html", "mod_data_input", "mod_audit", "mod_screen",
+            "mod_explore", "mod_compare", "mod_decide", "mod_report", "mod_context_rail")) {
+  source(file.path("R", paste0(f, ".R")))
+}
 
 #' Run DSI Studio application
 #' @param port Port number (optional)
 #' @export
 run_dsi_studio <- function(port = NULL) {
-  app <- shinyApp(
-    ui = dsi_studio_ui(),
-    server = dsi_studio_server
-  )
-  
-  if (!is.null(port)) {
-    runApp(app, port = port, host = "0.0.0.0", launch.browser = FALSE)
-  } else {
-    runApp(app, host = "0.0.0.0", launch.browser = FALSE)
-  }
+  app <- shinyApp(ui = dsi_studio_ui(), server = dsi_studio_server)
+  runApp(app, port = port %||% getOption("shiny.port"), host = "0.0.0.0", launch.browser = FALSE)
 }
 
 #' UI definition
 #' @keywords internal
 dsi_studio_ui <- function() {
-  # Use page_fluid for proper scrolling (not page_fillable which crushes content)
-  page_fluid(
+  page(
     theme = dsi_theme(),
     title = "DSI Studio",
-    
+    tags$head(tags$meta(name = "viewport", content = "width=device-width, initial-scale=1")),
     dsi_custom_css(),
-    dsi_step_class_js(),
-    dsi_context_rail_js(),
-    
-    layout_sidebar(
-      fillable = FALSE,
-      # Step rail sidebar (left)
-      sidebar = sidebar(
-        width = 260,
-        class = "step-rail",
-        style = "padding: 0;",
-        
-        div(style = "padding: 24px; border-bottom: 1px solid #E0E0E0;",
-          h4(style = "margin: 0; font-size: 18px; font-weight: 600;", "DSI Studio"),
-          p(style = "margin: 4px 0 0 0; font-size: 12px; color: #7F8C8D;", 
-            "Data Suitability Index")
-        ),
-        
-        actionLink("step_data", 
-          div(class = "step-item active", id = "step-data-item",
-            span(class = "step-number", "1"),
-            div(style = "display: inline-block; vertical-align: middle;",
-              div(class = "step-title", "Data"),
-              div(class = "step-subtitle", "Load and map your data")
-            )
-          )
-        ),
-        
-        actionLink("step_audit",
-          div(class = "step-item locked", id = "step-audit-item",
-            span(class = "step-number", "2"),
-            div(style = "display: inline-block; vertical-align: middle;",
-              div(class = "step-title", "Audit"),
-              div(class = "step-subtitle", "Review data quality")
-            )
-          )
-        ),
-        
-        actionLink("step_screen",
-          div(class = "step-item locked", id = "step-screen-item",
-            span(class = "step-number", "3"),
-            div(style = "display: inline-block; vertical-align: middle;",
-              div(class = "step-title", "Screen"),
-              div(class = "step-subtitle", "Run DSI computation")
-            )
-          )
-        ),
-        
-        actionLink("step_explore",
-          div(class = "step-item locked", id = "step-explore-item",
-            span(class = "step-number", "4"),
-            div(style = "display: inline-block; vertical-align: middle;",
-              div(class = "step-title", "Explore"),
-              div(class = "step-subtitle", "Review results")
-            )
-          )
-        ),
-        
-        actionLink("step_decide",
-          div(class = "step-item locked", id = "step-decide-item",
-            span(class = "step-number", "5"),
-            div(style = "display: inline-block; vertical-align: middle;",
-              div(class = "step-title", "Decide"),
-              div(class = "step-subtitle", "Accept, flag, or reject")
-            )
-          )
-        ),
-        
-        actionLink("step_report",
-          div(class = "step-item locked", id = "step-report-item",
-            span(class = "step-number", "6"),
-            div(style = "display: inline-block; vertical-align: middle;",
-              div(class = "step-title", "Report"),
-              div(class = "step-subtitle", "Export results")
-            )
+    dsi_app_js(),
+    div(class = "dsi-shell",
+      tags$nav(class = "step-rail", `aria-label` = "Workflow steps",
+        div(class = "rail-brand", h1("DSI Studio"), p("Data Suitability Index")),
+        uiOutput("step_rail")
+      ),
+      tags$main(class = "dsi-main",
+        div(class = "dsi-main-inner",
+          uiOutput("context_strip"),
+          navset_hidden(
+            id = "step_panels",
+            nav_panel_hidden("data", mod_data_input_ui("data_input")),
+            nav_panel_hidden("audit", mod_audit_ui("audit")),
+            nav_panel_hidden("screen", mod_screen_ui("screen")),
+            nav_panel_hidden("explore", mod_explore_ui("explore")),
+            nav_panel_hidden("decide", mod_decide_ui("decide")),
+            nav_panel_hidden("report", mod_report_ui("report"))
           )
         )
       ),
-      
-      # Main content area with context rail
-      layout_sidebar(
-        fillable = FALSE,
-        # Context rail (right)
-        sidebar = sidebar(
-          position = "right",
-          width = 240,
-          class = "context-rail",
-          
-          mod_context_rail_ui("context")
-        ),
-        
-        # Main content
-        div(class = "main-content",
-          uiOutput("current_step_content")
-        )
-      )
+      tags$aside(class = "context-rail", `aria-label` = "Current context", mod_context_rail_ui("context"))
     )
   )
 }
 
-#' Server logic
 #' @keywords internal
 dsi_studio_server <- function(input, output, session) {
-  
   app_state <- reactiveValues(
     current_step = "data",
-    data_raw = NULL,
-    data_std = NULL,
-    col_map = NULL,
-    group_cols = NULL,
-    dataset_name = NULL,
-    audit = NULL,
-    dsi_results = NULL,
-    current_group = NULL,
-    current_window = NULL,
-    method = "corrected",
-    decisions = NULL,
-    screen_settings = NULL,
-    steps_completed = c()
+    data_raw = NULL, data_std = NULL, col_map = NULL, group_cols = NULL,
+    dataset_name = NULL, effort_semantics = "per_group_year",
+    audit = NULL, dsi_results = NULL, screen_settings = NULL,
+    current_group = NULL, current_window = NULL,
+    overrides = list(), decisions = list(), null_tests = list(), comparison = NULL,
+    method = "corrected", steps_completed = character(0), export_count = 0
   )
-  
-  # Step navigation
-  observeEvent(input$step_data, {
-    app_state$current_step <- "data"
-    update_step_ui(session, "data", app_state$steps_completed)
-  })
-  
-  observeEvent(input$step_audit, {
-    if ("data" %in% app_state$steps_completed) {
-      app_state$current_step <- "audit"
-      update_step_ui(session, "audit", app_state$steps_completed)
+
+  go_to <- function(step) {
+    if (!step %in% DSI_STEPS$id) return()
+    if (!dsi_step_unlocked(step, app_state)) {
+      showNotification(sprintf("'%s' is locked until the previous steps are done.",
+                               DSI_STEPS$title[DSI_STEPS$id == step]), type = "warning", duration = 3)
+      return()
     }
-  })
-  
-  observeEvent(input$step_screen, {
-    if ("audit" %in% app_state$steps_completed) {
-      app_state$current_step <- "screen"
-      update_step_ui(session, "screen", app_state$steps_completed)
-    }
-  })
-  
-  observeEvent(input$step_explore, {
-    if ("screen" %in% app_state$steps_completed) {
-      app_state$current_step <- "explore"
-      update_step_ui(session, "explore", app_state$steps_completed)
-    }
-  })
-  
-  observeEvent(input$step_decide, {
-    if ("screen" %in% app_state$steps_completed) {
-      app_state$current_step <- "decide"
-      update_step_ui(session, "decide", app_state$steps_completed)
-    }
-  })
-  
-  observeEvent(input$step_report, {
-    if ("screen" %in% app_state$steps_completed) {
-      app_state$current_step <- "report"
-      update_step_ui(session, "report", app_state$steps_completed)
-    }
-  })
-  
-  # Render current step content
-  output$current_step_content <- renderUI({
+    app_state$current_step <- step
+  }
+  observeEvent(input$step_nav, go_to(input$step_nav))
+  session$userData$go_to <- go_to
+
+  observeEvent(app_state$current_step, {
+    nav_select("step_panels", app_state$current_step)
+    session$sendCustomMessage("dsiStepChanged", list(step = app_state$current_step))
     step <- app_state$current_step
-    
-    if (step == "data") {
-      mod_data_input_ui("data_input")
-    } else if (step == "audit") {
-      mod_audit_ui("audit")
-    } else if (step == "screen") {
-      mod_screen_ui("screen")
-    } else if (step == "explore") {
-      mod_explore_ui("explore")
-    } else if (step == "decide") {
-      mod_decide_ui("decide")
-    } else if (step == "report") {
-      mod_report_ui("report")
-    }
+    # Visiting Audit (with mapped data) or Explore (with results) completes it
+    if (step == "audit" && !is.null(app_state$data_std)) mark_done(app_state, "audit")
+    if (step == "explore" && !is.null(app_state$dsi_results)) mark_done(app_state, "explore")
   })
-  
-  # Module servers
-  data_input_return <- mod_data_input_server("data_input", app_state)
-  
-  observe({
-    if (!is.null(data_input_return$data_std())) {
-      app_state$data_std <- data_input_return$data_std()
-      app_state$col_map <- data_input_return$col_map()
-      app_state$group_cols <- data_input_return$group_cols()
-      
-      # Mark data step as completed
-      if (!"data" %in% app_state$steps_completed) {
-        app_state$steps_completed <- c(app_state$steps_completed, "data")
-        update_step_ui(session, "data", app_state$steps_completed)
-      }
-    }
+
+  output$step_rail <- renderUI({
+    st <- app_state$current_step
+    done <- app_state$steps_completed
+    metas <- step_rail_meta(app_state)
+    tagList(lapply(seq_len(nrow(DSI_STEPS)), function(i) {
+      id <- DSI_STEPS$id[i]
+      unlocked <- dsi_step_unlocked(id, app_state)
+      cls <- paste(c("step-item", if (id == st) "active", if (id %in% done) "done",
+                     if (!unlocked) "locked" else "open"), collapse = " ")
+      tags$a(href = "#", class = cls, id = paste0("step-", id, "-item"), `data-step` = id,
+        `aria-current` = if (id == st) "step" else NULL,
+        `aria-disabled` = if (!unlocked) "true" else NULL,
+        onclick = "Shiny.setInputValue('step_nav', this.dataset.step, {priority: 'event'}); return false;",
+        span(class = "step-number", if (id %in% done) HTML("&#10003;") else i),
+        div(class = "step-text",
+          div(class = "step-title", DSI_STEPS$title[i],
+              if (!unlocked) span(class = "step-lock", HTML("&#128274;"))),
+          div(class = "step-subtitle", DSI_STEPS$subtitle[i]),
+          if (!is.null(metas[[id]])) div(class = "step-meta", metas[[id]])))
+    }))
   })
-  
+
+  output$context_strip <- renderUI(context_strip_ui(app_state))
+
+  mod_data_input_server("data_input", app_state)
   mod_audit_server("audit", app_state)
-  
-  # Mark audit as completed when viewed
-  observe({
-    if (app_state$current_step == "audit" && 
-        !is.null(app_state$data_std) &&
-        !"audit" %in% app_state$steps_completed) {
-      app_state$steps_completed <- c(app_state$steps_completed, "audit")
-      update_step_ui(session, "audit", app_state$steps_completed)
-    }
-  })
-  
-  screen_return <- mod_screen_server("screen", app_state)
-  
-  observe({
-    if (!is.null(screen_return$dsi_results())) {
-      app_state$dsi_results <- screen_return$dsi_results()
-      
-      # Mark screen as completed
-      if (!"screen" %in% app_state$steps_completed) {
-        app_state$steps_completed <- c(app_state$steps_completed, "screen")
-        update_step_ui(session, "screen", app_state$steps_completed)
-      }
-    }
-  })
-  
+  mod_screen_server("screen", app_state)
   mod_explore_server("explore", app_state)
-  
-  decide_return <- mod_decide_server("decide", app_state)
-  
-  # Update when decisions are saved
-  observe({
-    decisions <- decide_return()
-    if (!is.null(decisions) && !is.null(decisions$decisions)) {
-      app_state$decisions <- decisions$decisions
-      # Trigger context rail update
-      isolate({
-        if (length(app_state$decisions) > 0) {
-          app_state$decision_count <- length(app_state$decisions)
-        }
-      })
-    }
-  })
-  
+  mod_decide_server("decide", app_state)
   mod_report_server("report", app_state)
-  
   mod_context_rail_server("context", app_state)
 }
 
-#' Update step UI classes
+#' App JavaScript
 #' @keywords internal
-update_step_ui <- function(session, current, completed) {
-  steps <- c("data", "audit", "screen", "explore", "decide", "report")
-  
-  for (step in steps) {
-    classes <- "step-item"
-    
-    if (step == current) {
-      classes <- paste(classes, "active")
-    }
-    
-    if (step %in% completed) {
-      classes <- paste(classes, "completed")
-    }
-    
-    # Lock steps that aren't accessible
-    step_index <- which(steps == step)
-    prev_step <- if (step_index > 1) steps[step_index - 1] else NULL
-    
-    # Decide and Report are accessible after Screen is completed
-    if (step %in% c("decide", "report")) {
-      if (!("screen" %in% completed) && step != current) {
-        classes <- paste(classes, "locked")
-      }
-    } else if (!is.null(prev_step) && !(prev_step %in% completed) && step != current) {
-      classes <- paste(classes, "locked")
-    }
-    
-    session$sendCustomMessage("updateStepClass", list(
-      step = step,
-      classes = classes
-    ))
-  }
-}
-
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-## ~ Custom UI helpers ~ ##
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-
-#' Custom CSS for DSI Studio
-#' @keywords internal
-dsi_custom_css <- function() {
-  tags$style(HTML("
-    /* Additional custom styles can be added here */
-  "))
-}
-
-#' JavaScript for step class updates
-#' @keywords internal
-dsi_step_class_js <- function() {
+dsi_app_js <- function() {
   tags$script(HTML("
-    Shiny.addCustomMessageHandler('updateStepClass', function(message) {
-      var elem = document.getElementById('step-' + message.step + '-item');
-      if (elem) {
-        elem.className = message.classes;
-      }
+    Shiny.addCustomMessageHandler('dsiStepChanged', function(msg) {
+      window.scrollTo({top: 0, behavior: 'instant'});
+      setTimeout(function() {
+        var el = document.getElementById('step-' + msg.step + '-item');
+        if (el && window.innerWidth < 768) el.scrollIntoView({inline: 'center', block: 'nearest'});
+        window.dispatchEvent(new Event('resize'));
+      }, 60);
+    });
+    Shiny.addCustomMessageHandler('dsiSetWindow', function(msg) {
+      var el = document.getElementById(msg.id);
+      if (el && el.__dsiSetWindow) el.__dsiSetWindow(msg.start, msg.end);
     });
   "))
 }
-
-#' JavaScript for context rail updates
-#' @keywords internal
-dsi_context_rail_js <- function() {
-  tags$script(HTML("
-    Shiny.addCustomMessageHandler('updateContext', function(message) {
-      var elem = document.getElementById(message.id);
-      if (elem) {
-        elem.innerText = message.value;
-      }
-    });
-  "))
-}
-
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-## ~ App launcher ~ ##
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
 shinyApp(ui = dsi_studio_ui(), server = dsi_studio_server)
