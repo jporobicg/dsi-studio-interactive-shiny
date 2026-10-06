@@ -1,6 +1,8 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-## ~ Module: Explore ~ ##
+## ~ Module: Explore (with Interactive Features) ~ ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
+
+library(echarts4r)
 
 #' Explore UI
 #' 
@@ -31,86 +33,165 @@ mod_explore_server <- function(id, app_state) {
       
       tagList(
         card(
-          card_header("Suitability Matrix"),
+          card_header("Suitability Score Grid"),
           card_body(
-            p("Matrix showing DSI scores by group. Click a group to view details."),
-            DT::dataTableOutput(ns("matrix_table"))
+            p("Each cell shows a group with mini sparkline of DSI scores by start year. Color indicates best DSI band. Click to explore details."),
+            uiOutput(ns("score_grid_ui"))
           )
         ),
         
-        card(
-          card_header("Window Explorer"),
-          card_body(
-            uiOutput(ns("window_explorer"))
+        uiOutput(ns("detail_view"))
+      )
+    })
+    
+    output$score_grid_ui <- renderUI({
+      req(app_state$dsi_results)
+      
+      ns <- session$ns
+      
+      all_windows <- app_state$dsi_results$dsi_all
+      best_windows <- app_state$dsi_results$dsi_best
+      
+      groups <- unique(all_windows$group_key)
+      
+      # Create grid of cells
+      cells <- lapply(groups, function(grp) {
+        grp_windows <- all_windows[all_windows$group_key == grp & all_windows$valid, ]
+        best <- best_windows[best_windows$group_key == grp, ]
+        
+        if (nrow(grp_windows) == 0 || nrow(best) == 0) {
+          return(NULL)
+        }
+        
+        # Order by start year
+        grp_windows <- grp_windows[order(grp_windows$start_year), ]
+        
+        best_dsi <- best$dsi_v2[1]
+        band <- get_dsi_band(best_dsi)
+        bg_color <- switch(band,
+          "Good" = "#009E73",
+          "Moderate" = "#E69F00",
+          "Poor" = "#D55E00",
+          "#CCCCCC"
+        )
+        
+        # Create sparkline data
+        spark_data <- paste0("[", paste(round(grp_windows$dsi_v2, 1), collapse = ","), "]")
+        
+        div(
+          class = "score-grid-cell",
+          style = sprintf("background-color: %s; border: 2px solid %s;", 
+                         paste0(bg_color, "20"), bg_color),
+          onclick = sprintf("Shiny.setInputValue('%s', '%s', {priority: 'event'});", 
+                          ns("cell_click"), grp),
+          div(class = "cell-title", grp),
+          div(class = "cell-score", sprintf("DSI: %.1f", best_dsi)),
+          div(class = "cell-band", band),
+          tags$canvas(
+            class = "sparkline-canvas",
+            `data-values` = spark_data,
+            width = "150",
+            height = "30"
           )
         )
+      })
+      
+      tagList(
+        tags$style(HTML("
+          .score-grid-cell {
+            display: inline-block;
+            width: 200px;
+            margin: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            vertical-align: top;
+          }
+          .score-grid-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          }
+          .cell-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+          }
+          .cell-score {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+          }
+          .cell-band {
+            font-size: 12px;
+            margin-bottom: 10px;
+          }
+          .sparkline-canvas {
+            display: block;
+            margin-top: 5px;
+          }
+        ")),
+        tags$script(HTML("
+          $(document).ready(function() {
+            function drawSparkline(canvas) {
+              var ctx = canvas.getContext('2d');
+              var values = JSON.parse(canvas.getAttribute('data-values'));
+              if (!values || values.length === 0) return;
+              
+              var width = canvas.width;
+              var height = canvas.height;
+              var max = Math.max(...values, 100);
+              var min = Math.min(...values, 0);
+              var range = max - min || 1;
+              
+              ctx.clearRect(0, 0, width, height);
+              ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              
+              values.forEach(function(val, i) {
+                var x = (i / (values.length - 1)) * width;
+                var y = height - ((val - min) / range) * height;
+                if (i === 0) {
+                  ctx.moveTo(x, y);
+                } else {
+                  ctx.lineTo(x, y);
+                }
+              });
+              
+              ctx.stroke();
+            }
+            
+            // Draw all sparklines
+            $('.sparkline-canvas').each(function() {
+              drawSparkline(this);
+            });
+            
+            // Redraw on any UI update
+            setTimeout(function() {
+              $('.sparkline-canvas').each(function() {
+                drawSparkline(this);
+              });
+            }, 500);
+          });
+        ")),
+        cells
       )
     })
     
-    output$matrix_table <- DT::renderDataTable({
-      req(app_state$dsi_results)
+    observeEvent(input$cell_click, {
+      req(input$cell_click)
+      app_state$current_group <- input$cell_click
       
+      # Find the best window for this group
       best <- app_state$dsi_results$dsi_best
-      
-      display_data <- best %>%
-        dplyr::select(
-          group_key,
-          start_year,
-          end_year,
-          n_usable,
-          dsi,
-          dsi_v2,
-          beta,
-          p_value,
-          ready,
-          selection_reason
-        ) %>%
-        dplyr::mutate(
-          window = sprintf("%d-%d", start_year, end_year),
-          dsi = round(dsi, 1),
-          dsi_v2 = round(dsi_v2, 1),
-          beta = round(beta, 4),
-          p_value = format.pval(p_value, digits = 3),
-          ready = ifelse(ready, "✓", "✗")
-        ) %>%
-        dplyr::select(
-          Group = group_key,
-          Window = window,
-          `N usable` = n_usable,
-          DSI = dsi,
-          DSI_v2 = dsi_v2,
-          β = beta,
-          `p-value` = p_value,
-          READY = ready,
-          Reason = selection_reason
-        )
-      
-      DT::datatable(
-        display_data,
-        selection = "single",
-        options = list(
-          pageLength = 20,
-          scrollX = TRUE,
-          dom = 'ftip'
-        ),
-        rownames = FALSE
-      )
+      grp_best <- best[best$group_key == input$cell_click, ]
+      if (nrow(grp_best) > 0) {
+        app_state$current_window <- grp_best[1, ]
+      }
     })
     
-    observeEvent(input$matrix_table_rows_selected, {
-      req(app_state$dsi_results)
-      
-      selected_row <- input$matrix_table_rows_selected
-      if (length(selected_row) == 0) return()
-      
-      best <- app_state$dsi_results$dsi_best
-      selected_group <- best[selected_row, ]
-      
-      app_state$current_group <- selected_group$group_key
-      app_state$current_window <- selected_group
-    })
-    
-    output$window_explorer <- renderUI({
+    output$detail_view <- renderUI({
       req(app_state$current_group)
       req(app_state$current_window)
       
@@ -120,41 +201,41 @@ mod_explore_server <- function(id, app_state) {
       win <- app_state$current_window
       
       tagList(
-        h4(sprintf("Group: %s", grp)),
-        h5(sprintf("Selected window: %d-%d", win$start_year, win$end_year)),
-        
-        layout_columns(
-          col_widths = c(6, 6),
-          
-          card(
-            card_header("Window Details"),
-            card_body(
-              tags$dl(
-                tags$dt("DSI"), tags$dd(format_dsi_score(win$dsi, 1)),
-                tags$dt("DSI_v2"), tags$dd(format_dsi_score(win$dsi_v2, 1)),
-                tags$dt("Usable years"), tags$dd(win$n_usable),
-                tags$dt("β (slope)"), tags$dd(sprintf("%.4f", win$beta)),
-                tags$dt("p-value"), tags$dd(format.pval(win$p_value, digits = 3)),
-                tags$dt("Effort contrast"), tags$dd(sprintf("%.2f", win$ec)),
-                tags$dt("CPUE contrast"), tags$dd(sprintf("%.2f", win$ic)),
-                tags$dt("Coverage"), tags$dd(sprintf("%.1f%%", win$frac_usable * 100)),
-                tags$dt("Outlier penalty"), tags$dd(sprintf("%.2f", win$p_out))
+        card(
+          card_header(sprintf("Detail View: %s", grp)),
+          card_body(
+            layout_columns(
+              col_widths = c(6, 6),
+              
+              card(
+                card_header("Window Details"),
+                card_body(
+                  tags$dl(
+                    tags$dt("DSI"), tags$dd(format_dsi_score(win$dsi, 1)),
+                    tags$dt("DSI_v2"), tags$dd(format_dsi_score(win$dsi_v2, 1)),
+                    tags$dt("Window"), tags$dd(sprintf("%d-%d", win$start_year, win$end_year)),
+                    tags$dt("Usable years"), tags$dd(win$n_usable),
+                    tags$dt("β (slope)"), tags$dd(sprintf("%.4f", win$beta)),
+                    tags$dt("p-value"), tags$dd(format.pval(win$p_value, digits = 3))
+                  )
+                )
+              ),
+              
+              card(
+                card_header("Component Scores"),
+                card_body(
+                  echarts4rOutput(ns("component_chart"), height = "250px")
+                )
               )
-            )
-          ),
-          
-          card(
-            card_header("Component Scores"),
-            card_body(
-              plotOutput(ns("component_plot"), height = "300px")
             )
           )
         ),
         
         card(
-          card_header("Time Series"),
+          card_header("Interactive Time Series Explorer"),
           card_body(
-            plotOutput(ns("timeseries_plot"), height = "400px")
+            p("Use the slider below to adjust the time window. Drag to zoom, scroll to pan."),
+            echarts4rOutput(ns("timeseries_interactive"), height = "500px")
           )
         ),
         
@@ -167,30 +248,27 @@ mod_explore_server <- function(id, app_state) {
       )
     })
     
-    output$component_plot <- renderPlot({
+    output$component_chart <- renderEcharts4r({
       req(app_state$current_window)
       
       win <- app_state$current_window
       
-      components <- data.frame(
+      data.frame(
         component = c("Slope", "Effort", "CPUE", "Sample", "C-E"),
         score = c(win$s_slope, win$s_e, win$s_i, win$s_n, win$s_ce)
-      )
-      
-      ggplot(components, aes(x = component, y = score)) +
-        geom_col(fill = "#3498DB", alpha = 0.8) +
-        geom_hline(yintercept = 1, linetype = "dashed", color = "gray50") +
-        coord_flip() +
-        labs(
-          title = "Component Scores",
-          x = NULL,
-          y = "Score (0-1)"
-        ) +
-        theme_dsi() +
-        ylim(0, 1)
+      ) %>%
+        e_charts(component) %>%
+        e_bar(score, 
+             itemStyle = list(color = "#3498DB"),
+             label = list(show = TRUE, position = "right", formatter = "{c}")) %>%
+        e_y_axis(max = 1) %>%
+        e_flip_coords() %>%
+        e_grid(left = "20%", right = "15%") %>%
+        e_tooltip(trigger = "axis") %>%
+        e_title("Component Scores", left = "center")
     })
     
-    output$timeseries_plot <- renderPlot({
+    output$timeseries_interactive <- renderEcharts4r({
       req(app_state$current_group)
       req(app_state$current_window)
       req(app_state$data_std)
@@ -202,42 +280,44 @@ mod_explore_server <- function(id, app_state) {
       df_std$group_key <- make_group_key(df_std, app_state$group_cols)
       
       grp_data <- df_std[df_std$group_key == grp, ]
+      grp_data <- grp_data[order(grp_data$year), ]
       
-      in_window <- grp_data$year >= win$start_year & grp_data$year <= win$end_year
-      
-      grp_data$in_window <- in_window
-      
-      p1 <- ggplot(grp_data, aes(x = year, y = catch)) +
-        geom_line(aes(color = in_window, linewidth = in_window)) +
-        geom_point(aes(color = in_window, size = in_window)) +
-        scale_color_manual(values = c("TRUE" = "#3498DB", "FALSE" = "gray70")) +
-        scale_linewidth_manual(values = c("TRUE" = 1, "FALSE" = 0.5)) +
-        scale_size_manual(values = c("TRUE" = 2, "FALSE" = 1)) +
-        labs(title = "Catch", y = "Catch") +
-        theme_dsi() +
-        theme(legend.position = "none", axis.title.x = element_blank())
-      
-      p2 <- ggplot(grp_data, aes(x = year, y = effort)) +
-        geom_line(aes(color = in_window, linewidth = in_window)) +
-        geom_point(aes(color = in_window, size = in_window)) +
-        scale_color_manual(values = c("TRUE" = "#3498DB", "FALSE" = "gray70")) +
-        scale_linewidth_manual(values = c("TRUE" = 1, "FALSE" = 0.5)) +
-        scale_size_manual(values = c("TRUE" = 2, "FALSE" = 1)) +
-        labs(title = "Effort", y = "Effort") +
-        theme_dsi() +
-        theme(legend.position = "none", axis.title.x = element_blank())
-      
-      p3 <- ggplot(grp_data, aes(x = year, y = cpue)) +
-        geom_line(aes(color = in_window, linewidth = in_window)) +
-        geom_point(aes(color = in_window, size = in_window)) +
-        scale_color_manual(values = c("TRUE" = "#3498DB", "FALSE" = "gray70")) +
-        scale_linewidth_manual(values = c("TRUE" = 1, "FALSE" = 0.5)) +
-        scale_size_manual(values = c("TRUE" = 2, "FALSE" = 1)) +
-        labs(title = "CPUE", x = "Year", y = "CPUE") +
-        theme_dsi() +
-        theme(legend.position = "none")
-      
-      gridExtra::grid.arrange(p1, p2, p3, ncol = 1)
+      # Create interactive chart with data zoom
+      grp_data %>%
+        e_charts(year) %>%
+        e_line(catch, name = "Catch", 
+              smooth = FALSE,
+              lineStyle = list(width = 2),
+              emphasis = list(focus = "series")) %>%
+        e_line(effort, name = "Effort",
+              smooth = FALSE,
+              lineStyle = list(width = 2),
+              emphasis = list(focus = "series")) %>%
+        e_line(cpue, name = "CPUE",
+              smooth = FALSE, 
+              lineStyle = list(width = 2),
+              emphasis = list(focus = "series")) %>%
+        e_tooltip(trigger = "axis") %>%
+        e_datazoom(
+          type = "slider",
+          start = (win$start_year - min(grp_data$year, na.rm = TRUE)) / 
+                  (max(grp_data$year, na.rm = TRUE) - min(grp_data$year, na.rm = TRUE)) * 100,
+          end = (win$end_year - min(grp_data$year, na.rm = TRUE)) / 
+                (max(grp_data$year, na.rm = TRUE) - min(grp_data$year, na.rm = TRUE)) * 100
+        ) %>%
+        e_datazoom(type = "inside") %>%
+        e_toolbox_feature(feature = "dataZoom") %>%
+        e_toolbox_feature(feature = "restore") %>%
+        e_toolbox_feature(feature = "saveAsImage") %>%
+        e_legend(top = "5%") %>%
+        e_grid(top = "15%", bottom = "20%") %>%
+        e_mark_area(
+          data = list(list(
+            list(xAxis = win$start_year),
+            list(xAxis = win$end_year)
+          )),
+          itemStyle = list(color = "rgba(52, 152, 219, 0.2)")
+        )
     })
     
     output$diagnostic_plot <- renderPlot({
