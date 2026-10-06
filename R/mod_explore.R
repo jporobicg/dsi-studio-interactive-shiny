@@ -284,22 +284,36 @@ mod_explore_server <- function(id, app_state) {
       grp_data <- df_std[df_std$group_key == grp, ]
       grp_data <- grp_data[order(grp_data$year), ]
       
-      # Create interactive chart with data zoom
+      # Create interactive chart with data zoom and separate y-axes
       grp_data %>%
         e_charts(year) %>%
         e_line(catch, name = "Catch", 
+              yAxisIndex = 0,
               smooth = FALSE,
               lineStyle = list(width = 2),
+              itemStyle = list(color = "#E69F00"),
               emphasis = list(focus = "series")) %>%
         e_line(effort, name = "Effort",
+              yAxisIndex = 1,
               smooth = FALSE,
               lineStyle = list(width = 2),
+              itemStyle = list(color = "#56B4E9"),
               emphasis = list(focus = "series")) %>%
         e_line(cpue, name = "CPUE",
+              yAxisIndex = 2,
               smooth = FALSE, 
               lineStyle = list(width = 2),
+              itemStyle = list(color = "#009E73"),
               emphasis = list(focus = "series")) %>%
         e_tooltip(trigger = "axis") %>%
+        e_y_axis(index = 0, name = "Catch", nameLocation = "middle", nameGap = 50,
+                axisLabel = list(fontSize = 11),
+                splitLine = list(show = FALSE)) %>%
+        e_y_axis(index = 1, name = "Effort", nameLocation = "middle", nameGap = 50,
+                axisLabel = list(fontSize = 11),
+                splitLine = list(show = FALSE)) %>%
+        e_y_axis(index = 2, name = "CPUE", nameLocation = "middle", nameGap = 50,
+                axisLabel = list(fontSize = 11)) %>%
         e_datazoom(
           type = "slider",
           start = (win$start_year - min(grp_data$year, na.rm = TRUE)) / 
@@ -312,7 +326,7 @@ mod_explore_server <- function(id, app_state) {
         e_toolbox_feature(feature = "restore") %>%
         e_toolbox_feature(feature = "saveAsImage") %>%
         e_legend(top = "3%") %>%
-        e_grid(top = "12%", bottom = "15%", left = "8%", right = "5%") %>%
+        e_grid(top = "12%", bottom = "15%", left = "8%", right = "15%") %>%
         e_mark_area(
           data = list(
             list(xAxis = win$start_year),
@@ -321,7 +335,7 @@ mod_explore_server <- function(id, app_state) {
           itemStyle = list(color = "rgba(52, 152, 219, 0.15)")
         ) %>%
         e_x_axis(axisLabel = list(fontSize = 11, formatter = htmlwidgets::JS("function(v) { return String(v); }")), min = "dataMin", max = "dataMax") %>%
-        e_y_axis(axisLabel = list(fontSize = 11))
+        e_title("Time Series (with separate axes)", left = "center", top = "0%")
     })
     
     output$diagnostic_plot <- renderPlot({
