@@ -57,6 +57,12 @@ mod_context_rail_ui <- function(id) {
       class = "context-item",
       div(class = "context-label", "Decision Status"),
       div(class = "context-value", textOutput(ns("decision_status"), inline = TRUE))
+    ),
+    
+    div(
+      class = "context-item",
+      div(class = "context-label", "Ready Groups"),
+      div(class = "context-value", textOutput(ns("ready_groups"), inline = TRUE))
     )
   )
 }
@@ -73,8 +79,12 @@ mod_context_rail_server <- function(id, app_state) {
       if (is.null(app_state$data_std)) {
         "No data loaded"
       } else {
-        nrow_val <- nrow(app_state$data_std)
-        sprintf("%d rows", nrow_val)
+        # Show dataset name if available, otherwise show row count
+        if (!is.null(app_state$dataset_name) && nzchar(app_state$dataset_name)) {
+          app_state$dataset_name
+        } else {
+          sprintf("Loaded data (%d rows)", nrow(app_state$data_std))
+        }
       }
     })
     
@@ -150,7 +160,21 @@ mod_context_rail_server <- function(id, app_state) {
       n_ready <- sum(best$ready == TRUE, na.rm = TRUE)
       n_total <- nrow(best)
       
-      sprintf("%d of %d READY", n_ready, n_total)
+      sprintf("%d of %d decided", n_ready, n_total)
+    })
+    
+    output$ready_groups <- renderText({
+      if (is.null(app_state$dsi_results)) {
+        return("0")
+      }
+      
+      best <- app_state$dsi_results$dsi_best
+      if (is.null(best) || nrow(best) == 0) {
+        return("0")
+      }
+      
+      n_ready <- sum(best$ready == TRUE, na.rm = TRUE)
+      sprintf("%d", n_ready)
     })
   })
 }

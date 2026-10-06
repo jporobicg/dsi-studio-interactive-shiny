@@ -54,12 +54,14 @@ mod_data_input_server <- function(id, app_state) {
       df <- load_demo_data("main_groups")
       data_raw(df)
       app_state$data_raw <- df
+      app_state$dataset_name <- "Thai Main Groups (demo)"
     })
     
     observeEvent(input$load_demo_fleet, {
       df <- load_demo_data("species_fleet")
       data_raw(df)
       app_state$data_raw <- df
+      app_state$dataset_name <- "Species × Fleet (demo)"
     })
     
     observeEvent(input$file_upload, {
@@ -83,6 +85,7 @@ mod_data_input_server <- function(id, app_state) {
       if (!is.null(df)) {
         data_raw(df)
         app_state$data_raw <- df
+        app_state$dataset_name <- input$file_upload$name
       }
     })
     
@@ -155,9 +158,12 @@ mod_data_input_server <- function(id, app_state) {
                        selected = guessed_map$cpue %||% "")
           ),
           
-          actionButton(ns("apply_mapping"), "Apply Mapping",
-                      icon = icon("check"),
-                      class = "btn-primary mt-2")
+          div(
+            style = "margin-top: 1rem;",
+            actionButton(ns("apply_mapping"), "Apply Mapping & Continue",
+                        icon = icon("arrow-right"),
+                        class = "btn-primary")
+          )
         )
       )
     })
@@ -197,7 +203,7 @@ mod_data_input_server <- function(id, app_state) {
         
         group_cols(grp_cols)
         
-        showNotification("Data standardized successfully", type = "message")
+        showNotification("Data standardized successfully! You can now proceed to Audit.", type = "message", duration = 3)
       }
     })
     
