@@ -10,7 +10,7 @@ cat("========== LEGACY PARITY CHECK ==========\n\n")
 
 cat("Step 1: Running original scripts...\n")
 
-setwd("/workspace/uploads/dsi/src")
+setwd("uploads/dsi/src")
 source("R/functions_dsi.R")
 
 df_main <- read_csv("../data/Thai_main_groups.csv", show_col_types = FALSE)
@@ -86,11 +86,11 @@ df_original <- bind_rows(lapply(all_windows_original, as.data.frame))
 cat(sprintf("Original: %d windows\n", nrow(df_original)))
 cat(sprintf("Original valid: %d windows\n", sum(df_original$valid, na.rm = TRUE)))
 
-write_csv(df_original, "/workspace/parity_check_original.csv")
+write_csv(df_original, "parity_check_original.csv")
 
 cat("\nStep 2: Running new legacy implementation...\n")
 
-setwd("/workspace")
+setwd(".")
 source("R/dsicore_utils.R")
 source("R/dsicore_data.R")
 source("R/dsicore_windows.R")
@@ -125,7 +125,7 @@ df_new <- results_new$dsi_all
 cat(sprintf("New: %d windows\n", nrow(df_new)))
 cat(sprintf("New valid: %d windows\n", sum(df_new$valid, na.rm = TRUE)))
 
-write_csv(df_new, "/workspace/parity_check_new.csv")
+write_csv(df_new, "parity_check_new.csv")
 
 cat("\nStep 3: Comparing results...\n")
 
@@ -182,7 +182,7 @@ if (nrow(mismatches) > 0) {
                     diff_dsi, dsi_v2_orig, dsi_v2_new, diff_dsi_v2), 10))
 }
 
-write_csv(comparison, "/workspace/parity_check_comparison.csv")
+write_csv(comparison, "parity_check_comparison.csv")
 
 cat("\n========== PARITY CHECK COMPLETE ==========\n")
 cat("Results saved to:\n")

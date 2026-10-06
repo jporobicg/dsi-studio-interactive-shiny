@@ -11,7 +11,7 @@ cat("========== LEGACY PARITY CHECK ==========\n\n")
 cat("Using pre-generated outputs from original scripts\n")
 cat("Loading original outputs from uploads/dsi/run/01_DSI_screening/outputs_main/\n\n")
 
-df_original <- read_csv("/workspace/uploads/dsi/run/01_DSI_screening/outputs_main/dsi_all_windows.csv", 
+df_original <- read_csv("uploads/dsi/run/01_DSI_screening/outputs_main/dsi_all_windows.csv", 
                        show_col_types = FALSE)
 
 cat(sprintf("Original outputs: %d windows\n", nrow(df_original)))
@@ -19,7 +19,7 @@ cat(sprintf("Original valid: %d windows\n", sum(df_original$valid, na.rm = TRUE)
 
 cat("\nRunning new legacy implementation...\n")
 
-setwd("/workspace")
+setwd(".")
 source("R/dsicore_utils.R")
 source("R/dsicore_data.R")
 source("R/dsicore_windows.R")
@@ -54,7 +54,7 @@ df_new <- results_new$dsi_all
 cat(sprintf("New implementation: %d windows\n", nrow(df_new)))
 cat(sprintf("New valid: %d windows\n", sum(df_new$valid, na.rm = TRUE)))
 
-write_csv(df_new, "/workspace/parity_check_new_legacy.csv")
+write_csv(df_new, "parity_check_new_legacy.csv")
 
 cat("\nComparing results...\n")
 
@@ -126,7 +126,7 @@ if (nrow(valid_comparison) > 0) {
              100 * perfect_matches / nrow(valid_comparison)))
 }
 
-write_csv(comparison, "/workspace/parity_check_comparison.csv")
+write_csv(comparison, "parity_check_comparison.csv")
 
 cat("\n========== PARITY CHECK COMPLETE ==========\n")
 cat("Results saved to:\n")
