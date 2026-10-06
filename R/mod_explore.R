@@ -373,8 +373,9 @@ mod_explore_server <- function(id, app_state) {
       req(length(v) > 0)
       br <- seq(0, 100, by = 2.5)
       h <- graphics::hist(pmin(pmax(v, 0), 100), breaks = br, plot = FALSE)
-      df <- data.frame(bin = sprintf("%.1f", h$mids), count = h$counts)
-      obs_bin <- sprintf("%.1f", h$mids[max(1, findInterval(min(max(r$observed_dsi_v2, 0), 99.99), br))])
+      lo <- utils::head(br, -1)
+      df <- data.frame(bin = sprintf("%g", lo), count = h$counts)
+      obs_bin <- sprintf("%g", lo[max(1, findInterval(min(max(r$observed_dsi_v2, 0), 99.99), br))])
       df |> e_charts(bin) |>
         e_bar(count, name = "Null runs", itemStyle = list(color = "#BDC3C7"), barCategoryGap = "5%") |>
         e_mark_line(data = list(xAxis = obs_bin), title = sprintf("observed %.1f", r$observed_dsi_v2),
