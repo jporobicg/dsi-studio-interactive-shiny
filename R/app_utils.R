@@ -134,3 +134,16 @@ load_demo_data <- function(dataset_name = "main_groups") {
   
   readr::read_csv(file_path, show_col_types = FALSE)
 }
+
+#' Pick first column whose lower-cased name matches one of the candidates
+#' 
+#' [LOCAL FIX] guess_column() is called by mod_data_input.R but was never defined.
+#' 
+#' @param col_names Character vector of column names
+#' @param candidates Character vector of candidate names to match
+#' @return Character string of matched column name, or empty string
+#' @keywords internal
+guess_column <- function(col_names, candidates) {
+  hit <- col_names[tolower(col_names) %in% tolower(candidates)]
+  if (length(hit) > 0) hit[1] else ""
+}

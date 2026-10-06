@@ -116,3 +116,7 @@ safe_log_cpue <- function(cpue) {
   s_p <- clamp01(ks_p / p_ref)
   s_psi * s_p
 }
+
+#' Null-coalescing operator (base R >= 4.4 has one; defined here for older R)
+#' @keywords internal
+`%||%` <- function(a, b) if (is.null(a)) b else a

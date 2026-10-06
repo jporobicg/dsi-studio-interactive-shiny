@@ -14,8 +14,11 @@
 #' @param anchor_mode Window anchor mode ("last_usable_year", "last_year", "free")
 #' @param method "corrected" or "legacy"
 #' @param effort_semantics Effort handling ("per_group_year", "per_fleet_year", "per_row")
-#' @param refs Reference parameters
-#' @param weights Component weights
+#' @param refs Reference parameters (merged over [default_dsi_refs()])
+#' @param weights Component weights (default follows `fixes$weights_sum_one`)
+#' @param fixes Bug-fix switches; default `dsi_fix_flags(method)`. Used by the
+#'   Legacy vs Corrected comparison to switch one correction at a time.
+#' @param min_usable Minimum usable observations per window
 #' @param selection_opts Selection criteria
 #' @param progress_callback Optional function(message, value) for progress updates
 #' @return List with standardized data, audit findings, all windows, best windows
@@ -29,9 +32,16 @@ run_dsi_workflow <- function(df,
                             method = "corrected",
                             effort_semantics = "per_group_year",
                             refs = default_dsi_refs(),
-                            weights = default_dsi_weights(legacy = method == "legacy"),
+                            weights = NULL,
                             selection_opts = default_selection_opts(),
-                            progress_callback = NULL) {
+                            progress_callback = NULL,
+                            fixes = NULL,
+                            min_usable = 6) {
+  fixes <- fixes %||% dsi_fix_flags(method)
+  weights <- weights %||% default_dsi_weights(legacy = !isTRUE(fixes$weights_sum_one))
+  refs <- utils::modifyList(default_dsi_refs(), refs %||% list())
+  selection_opts <- utils::modifyList(default_selection_opts(), selection_opts %||% list())
+  if (length(group_cols) == 0) group_cols <- NULL
   
   report_progress <- function(msg, value = NULL) {
     if (!is.null(progress_callback)) {
@@ -43,7 +53,7 @@ run_dsi_workflow <- function(df,
   df_std <- standardize_columns(df, col_map)
   
   report_progress("Harmonizing effort...", 0.2)
-  if (method == "corrected") {
+  if (isTRUE(fixes$effort_harmonisation)) {
     df_std <- harmonize_effort_corrected(df_std, effort_semantics, group_cols)
   } else {
     df_std <- harmonize_effort_legacy(df_std)
@@ -54,7 +64,8 @@ run_dsi_workflow <- function(df,
   
   report_progress("Generating windows...", 0.3)
   windows <- generate_all_windows(df_std, group_cols, min_n, max_n, 
-                                 anchor_mode, method)
+                                 anchor_mode,
+                                 if (isTRUE(fixes$anchor_last_usable)) "corrected" else "legacy")
   
   if (nrow(windows) == 0) {
     return(list(
@@ -84,8 +95,8 @@ run_dsi_workflow <- function(df,
     grp_data <- df_std[df_std$group_key == row$group_key, ]
     
     result <- score_window(grp_data, row$start_year, row$end_year,
-                          method = method, refs = refs, weights = weights,
-                          include_v2 = TRUE)
+                          refs = refs, weights = weights, include_v2 = TRUE,
+                          fixes = fixes, min_n = min_n, min_usable = min_usable)
     
     result$group_key <- row$group_key
     result
@@ -93,17 +104,17 @@ run_dsi_workflow <- function(df,
   
   report_progress("Compiling results...", 0.85)
   
-  dsi_all <- do.call(rbind, lapply(dsi_results, function(x) {
+  # [LOCAL FIX 7] invalid windows return fewer fields than valid ones, so
+  # do.call(rbind, ...) failed with "numbers of columns of arguments do not
+  # match" on the Species x Fleet demo. bind_rows() fills missing fields with NA.
+  dsi_all <- dplyr::bind_rows(lapply(dsi_results, function(x) {
     as.data.frame(x, stringsAsFactors = FALSE)
   }))
   
   report_progress("Selecting best windows...", 0.9)
   
-  if (method == "corrected") {
-    dsi_best <- select_best_window_corrected(dsi_all, selection_opts, "group_key")
-  } else {
-    dsi_best <- select_best_window_legacy(dsi_all, selection_opts, "group_key")
-  }
+  dsi_best <- select_best_window(dsi_all, selection_opts, "group_key",
+                                 stability_filter = isTRUE(fixes$stability_filter))
   
   report_progress("Complete", 1.0)
   
@@ -123,7 +134,9 @@ run_dsi_workflow <- function(df,
       effort_semantics = effort_semantics,
       refs = refs,
       weights = weights,
-      selection_opts = selection_opts
+      selection_opts = selection_opts,
+      fixes = fixes,
+      min_usable = min_usable
     )
   )
 }
