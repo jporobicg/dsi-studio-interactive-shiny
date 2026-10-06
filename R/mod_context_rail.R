@@ -1,156 +1,182 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
-## ~ Module: Context Rail ~ ##
+## ~ Module: Context Rail (Redesigned) ~ ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 
-#' Context rail UI
-#' 
-#' Persistent context sidebar showing current state.
-#' 
+#' Context Rail UI
 #' @param id Module ID
 #' @export
 mod_context_rail_ui <- function(id) {
   ns <- NS(id)
   
-  div(
-    class = "context-rail",
-    
-    div(
-      class = "context-item",
-      div(class = "context-label", "Dataset"),
-      div(class = "context-value", textOutput(ns("dataset_name"), inline = TRUE))
+  tagList(
+    div(class = "context-section",
+      div(class = "context-label", "DATASET"),
+      div(class = "context-value", id = ns("dataset_name"),
+          span(class = "empty", "No data loaded"))
     ),
     
-    div(
-      class = "context-item",
-      div(class = "context-label", "Method"),
-      div(class = "context-value", textOutput(ns("method_profile"), inline = TRUE))
+    div(class = "context-section",
+      div(class = "context-label", "ROWS"),
+      div(class = "context-value", id = ns("dataset_rows"),
+          span(class = "empty", "—"))
     ),
     
-    div(
-      class = "context-item",
-      div(class = "context-label", "Groups"),
-      div(class = "context-value", textOutput(ns("n_groups"), inline = TRUE))
+    div(class = "context-section",
+      div(class = "context-label", "GROUPS"),
+      div(class = "context-value", id = ns("dataset_groups"),
+          span(class = "empty", "—"))
     ),
     
-    div(
-      class = "context-item",
-      div(class = "context-label", "Current Group"),
-      div(class = "context-value", textOutput(ns("current_group"), inline = TRUE))
+    div(class = "context-section",
+      div(class = "context-label", "TIME RANGE"),
+      div(class = "context-value", id = ns("dataset_years"),
+          span(class = "empty", "—"))
     ),
     
-    div(
-      class = "context-item",
-      div(class = "context-label", "Current Window"),
-      div(class = "context-value", textOutput(ns("current_window"), inline = TRUE))
+    hr(style = "border-top: 1px solid #E8E8E8; margin: 24px 0;"),
+    
+    div(class = "context-section",
+      div(class = "context-label", "METHOD"),
+      div(class = "context-value", id = ns("method_name"),
+          span(class = "empty", "—"))
     ),
     
-    div(
-      class = "context-item",
-      div(class = "context-label", "DSI Score"),
-      div(
-        class = "context-value",
-        uiOutput(ns("current_score"))
-      )
+    div(class = "context-section",
+      div(class = "context-label", "WINDOWS EVALUATED"),
+      div(class = "context-value", id = ns("windows_count"),
+          span(class = "empty", "—"))
     ),
     
-    div(
-      class = "context-item",
-      div(class = "context-label", "Decision Status"),
-      div(class = "context-value", textOutput(ns("decision_status"), inline = TRUE))
+    div(class = "context-section",
+      div(class = "context-label", "MEDIAN DSI"),
+      div(class = "context-value", id = ns("median_dsi"),
+          span(class = "empty", "—"))
+    ),
+    
+    div(class = "context-section",
+      div(class = "context-label", "READY GROUPS"),
+      div(class = "context-value", id = ns("ready_count"),
+          span(class = "empty", "—"))
     )
   )
 }
 
-#' Context rail server
-#' 
+#' Context Rail Server
 #' @param id Module ID
-#' @param app_state Reactive values with application state
+#' @param app_state Application state
 #' @export
 mod_context_rail_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {
     
-    output$dataset_name <- renderText({
-      if (is.null(app_state$data_std)) {
-        "No data loaded"
-      } else {
-        nrow_val <- nrow(app_state$data_std)
-        sprintf("%d rows", nrow_val)
+    # Update context when data changes
+    observe({
+      if (!is.null(app_state$data_std)) {
+        df <- app_state$data_std
+        
+        # Dataset name
+        session$sendCustomMessage("updateContext", list(
+          id = session$ns("dataset_name"),
+          value = "Loaded data",
+          empty = FALSE
+        ))
+        
+        # Rows
+        session$sendCustomMessage("updateContext", list(
+          id = session$ns("dataset_rows"),
+          value = format(nrow(df), big.mark = ","),
+          empty = FALSE
+        ))
+        
+        # Groups
+        if (length(app_state$group_cols) > 0) {
+          df$group_key <- make_group_key(df, app_state$group_cols)
+          n_groups <- length(unique(df$group_key))
+          session$sendCustomMessage("updateContext", list(
+            id = session$ns("dataset_groups"),
+            value = as.character(n_groups),
+            empty = FALSE
+          ))
+        } else {
+          session$sendCustomMessage("updateContext", list(
+            id = session$ns("dataset_groups"),
+            value = "1",
+            empty = FALSE
+          ))
+        }
+        
+        # Years
+        years <- range(df$year, na.rm = TRUE)
+        session$sendCustomMessage("updateContext", list(
+          id = session$ns("dataset_years"),
+          value = sprintf("%d–%d", years[1], years[2]),
+          empty = FALSE
+        ))
       }
     })
     
-    output$method_profile <- renderText({
-      if (app_state$method == "corrected") {
-        "Corrected"
-      } else if (app_state$method == "legacy") {
-        "Report v1 (legacy)"
-      } else {
-        "Custom"
-      }
-    })
-    
-    output$n_groups <- renderText({
-      if (is.null(app_state$dsi_results)) {
+    # Update method
+    observe({
+      method_label <- switch(app_state$method,
+        "corrected" = "Corrected",
+        "legacy" = "Legacy",
         "—"
-      } else {
-        n <- length(unique(app_state$dsi_results$dsi_all$group_key))
-        sprintf("%d", n)
-      }
-    })
-    
-    output$current_group <- renderText({
-      if (is.null(app_state$current_group)) {
-        "—"
-      } else {
-        app_state$current_group
-      }
-    })
-    
-    output$current_window <- renderText({
-      if (is.null(app_state$current_window)) {
-        "—"
-      } else {
-        sprintf("%d–%d", 
-               app_state$current_window$start_year,
-               app_state$current_window$end_year)
-      }
-    })
-    
-    output$current_score <- renderUI({
-      if (is.null(app_state$current_window)) {
-        return("—")
-      }
-      
-      score <- app_state$current_window$dsi_v2
-      if (is.na(score)) score <- app_state$current_window$dsi
-      
-      if (is.na(score) || !is.finite(score)) {
-        return(span(class = "dsi-band-invalid", "Invalid"))
-      }
-      
-      band <- get_dsi_band(score)
-      band_class <- paste0("dsi-band-", tolower(band$label))
-      
-      tagList(
-        span(class = "dsi-number", format_dsi_score(score, 0)),
-        " ",
-        span(class = band_class, band$label)
       )
+      
+      session$sendCustomMessage("updateContext", list(
+        id = session$ns("method_name"),
+        value = method_label,
+        empty = FALSE
+      ))
     })
     
-    output$decision_status <- renderText({
-      if (is.null(app_state$dsi_results)) {
-        return("—")
+    # Update results when screening completes
+    observe({
+      if (!is.null(app_state$dsi_results)) {
+        results <- app_state$dsi_results
+        
+        # Windows count
+        n_windows <- nrow(results$dsi_all)
+        n_valid <- sum(results$dsi_all$valid, na.rm = TRUE)
+        session$sendCustomMessage("updateContext", list(
+          id = session$ns("windows_count"),
+          value = sprintf("%d (%d valid)", n_windows, n_valid),
+          empty = FALSE
+        ))
+        
+        # Median DSI
+        valid_dsi <- results$dsi_all$dsi[results$dsi_all$valid]
+        if (length(valid_dsi) > 0) {
+          median_val <- median(valid_dsi, na.rm = TRUE)
+          session$sendCustomMessage("updateContext", list(
+            id = session$ns("median_dsi"),
+            value = sprintf("%.1f", median_val),
+            empty = FALSE
+          ))
+        }
+        
+        # READY count
+        n_ready <- sum(results$dsi_best$ready == TRUE, na.rm = TRUE)
+        session$sendCustomMessage("updateContext", list(
+          id = session$ns("ready_count"),
+          value = as.character(n_ready),
+          empty = FALSE
+        ))
       }
-      
-      best <- app_state$dsi_results$dsi_best
-      if (is.null(best) || nrow(best) == 0) {
-        return("—")
-      }
-      
-      n_ready <- sum(best$ready == TRUE, na.rm = TRUE)
-      n_total <- nrow(best)
-      
-      sprintf("%d of %d READY", n_ready, n_total)
     })
   })
 }
+
+# Add JavaScript to update context values
+tags$script(HTML("
+  Shiny.addCustomMessageHandler('updateContext', function(message) {
+    var elem = document.getElementById(message.id);
+    if (elem) {
+      if (message.empty) {
+        elem.innerHTML = '<span class=\"empty\">' + message.value + '</span>';
+      } else {
+        elem.textContent = message.value;
+        elem.className = 'context-value';
+      }
+    }
+  });
+"))
