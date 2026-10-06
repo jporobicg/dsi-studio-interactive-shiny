@@ -76,15 +76,22 @@ mod_context_rail_server <- function(id, app_state) {
   moduleServer(id, function(input, output, session) {
     
     output$dataset_name <- renderText({
-      if (is.null(app_state$data_std)) {
-        "No data loaded"
-      } else {
-        # Show dataset name if available, otherwise show row count
+      # Show dataset name as soon as data_raw is loaded, not waiting for mapping
+      if (!is.null(app_state$data_raw)) {
+        if (!is.null(app_state$dataset_name) && nzchar(app_state$dataset_name)) {
+          app_state$dataset_name
+        } else {
+          sprintf("Loaded data (%d rows)", nrow(app_state$data_raw))
+        }
+      } else if (!is.null(app_state$data_std)) {
+        # Fallback if data_std exists but data_raw doesn't
         if (!is.null(app_state$dataset_name) && nzchar(app_state$dataset_name)) {
           app_state$dataset_name
         } else {
           sprintf("Loaded data (%d rows)", nrow(app_state$data_std))
         }
+      } else {
+        "No data loaded"
       }
     })
     
