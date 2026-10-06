@@ -64,8 +64,9 @@ mod_audit_server <- function(id, app_state) {
           p(finding$message),
           if (!is.null(finding$data) && nrow(finding$data) > 0) {
             tagList(
-              details(
-                summary("Show details"),
+              # [LOCAL FIX 2] details()/summary() are not functions; use tags$
+              tags$details(
+                tags$summary("Show details"),
                 DT::dataTableOutput(ns(paste0("audit_table_", finding_name)))
               )
             )

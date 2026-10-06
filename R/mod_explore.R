@@ -53,14 +53,18 @@ mod_explore_server <- function(id, app_state) {
       best_windows <- app_state$dsi_results$dsi_best
       
       # Detect if we have both species and fleet dimensions for matrix layout
-      has_species <- "species" %in% names(app_state$data_std)
-      has_fleet <- "fleet" %in% names(app_state$data_std)
+      # [LOCAL FIX 3] standardize_columns() always creates a `fleet` column (all NA
+      # when unmapped), so testing names(data_std) forced the matrix layout for
+      # single-dimension data. Use the mapped grouping columns instead.
+      has_species <- "species" %in% app_state$group_cols
+      has_fleet <- "fleet" %in% app_state$group_cols
       use_matrix <- has_species && has_fleet
       
       if (use_matrix) {
-        # Extract species and fleet from group_key (format: "species___fleet")
-        best_windows$species_name <- sapply(strsplit(as.character(best_windows$group_key), "___"), `[`, 1)
-        best_windows$fleet_name <- sapply(strsplit(as.character(best_windows$group_key), "___"), `[`, 2)
+        # [LOCAL FIX 3] make_group_key() joins with " | ", not "___"
+        key_sep <- " | "
+        best_windows$species_name <- sapply(strsplit(as.character(best_windows$group_key), key_sep, fixed = TRUE), `[`, 1)
+        best_windows$fleet_name <- sapply(strsplit(as.character(best_windows$group_key), key_sep, fixed = TRUE), `[`, 2)
         
         species_list <- unique(best_windows$species_name)
         fleet_list <- unique(best_windows$fleet_name)
@@ -139,7 +143,7 @@ mod_explore_server <- function(id, app_state) {
               div(class = "dsi-matrix-row",
                 div(class = "dsi-matrix-row-label", sp),
                 lapply(fleet_list, function(fl) {
-                  grp_key <- paste0(sp, "___", fl)
+                  grp_key <- paste0(sp, key_sep, fl)  # [LOCAL FIX 3]
                   best <- best_windows[best_windows$group_key == grp_key, ]
                   
                   if (nrow(best) == 0) {
@@ -419,20 +423,23 @@ mod_explore_server <- function(id, app_state) {
       # Create interactive chart with data zoom and separate y-axes
       grp_data %>%
         e_charts(year) %>%
+        # [LOCAL FIX 4] echarts4r ignores/overrides `yAxisIndex` passed via `...`;
+        # all three series landed on one axis (0-150000) so CPUE was still flat.
+        # Use echarts4r's own `y_index` and give axes 1/2 a right-hand position.
         e_line(catch, name = "Catch", 
-              yAxisIndex = 0,
+              y_index = 0,
               smooth = FALSE,
               lineStyle = list(width = 2),
               itemStyle = list(color = "#E69F00"),
               emphasis = list(focus = "series")) %>%
         e_line(effort, name = "Effort",
-              yAxisIndex = 1,
+              y_index = 1,
               smooth = FALSE,
               lineStyle = list(width = 2),
               itemStyle = list(color = "#56B4E9"),
               emphasis = list(focus = "series")) %>%
         e_line(cpue, name = "CPUE",
-              yAxisIndex = 2,
+              y_index = 2,
               smooth = FALSE, 
               lineStyle = list(width = 2),
               itemStyle = list(color = "#009E73"),
@@ -442,9 +449,11 @@ mod_explore_server <- function(id, app_state) {
                 axisLabel = list(fontSize = 11),
                 splitLine = list(show = FALSE)) %>%
         e_y_axis(index = 1, name = "Effort", nameLocation = "middle", nameGap = 50,
+                position = "right",  # [LOCAL FIX 4]
                 axisLabel = list(fontSize = 11),
                 splitLine = list(show = FALSE)) %>%
         e_y_axis(index = 2, name = "CPUE", nameLocation = "middle", nameGap = 50,
+                position = "right", offset = 80,  # [LOCAL FIX 4]
                 axisLabel = list(fontSize = 11)) %>%
         e_datazoom(
           type = "slider",

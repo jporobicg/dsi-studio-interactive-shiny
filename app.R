@@ -47,7 +47,11 @@ run_dsi_studio <- function(port = NULL) {
 #' UI definition
 #' @keywords internal
 dsi_studio_ui <- function() {
-  page_fillable(
+  # [LOCAL FIX 6] page_fillable() squeezed every tab into the viewport height:
+  # at 1440x900 the Explore detail cards, time-series chart (~30px) and
+  # diagnostics plot (~50px) and the Decide cards were crushed/clipped.
+  # Use a normal scrolling page and a non-fillable sidebar layout.
+  page_fluid(
     theme = dsi_theme(),
     title = "DSI Studio",
     
@@ -60,6 +64,7 @@ dsi_studio_ui <- function() {
     dsi_context_rail_js(),
     
     layout_sidebar(
+      fillable = FALSE,  # [LOCAL FIX 6]
       sidebar = sidebar(
         width = 260,
         mod_context_rail_ui("context")

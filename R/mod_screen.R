@@ -124,6 +124,16 @@ mod_screen_server <- function(id, app_state) {
         })
         
         if (!is.null(results)) {
+          # [LOCAL FIX 5] remember the exact screening settings so Report/Export
+          # can write them to the YAML and the standalone script can reproduce them
+          app_state$screen_settings <- list(
+            min_n = input$min_n,
+            max_n = input$max_n,
+            anchor_mode = input$anchor_mode,
+            method = input$method,
+            effort_semantics = "per_group_year",
+            group_cols = app_state$group_cols
+          )
           dsi_results(results)
           screening_message("Screening complete!")
           screening_progress(1)

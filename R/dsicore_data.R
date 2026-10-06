@@ -183,9 +183,17 @@ audit_data <- function(df, group_cols = c("species", "fleet")) {
     )
   }
   
-  effort_conflicts <- df %>%
-    dplyr::filter(effort_conflicts == TRUE) %>%
-    dplyr::distinct(year, fleet, effort_n_unique)
+  # [LOCAL FIX 1] effort_conflicts/effort_n_unique only exist after effort
+  # harmonisation; the Audit tab passes un-harmonised data_std, so the filter
+  # threw "object 'effort_conflicts' not found" inside an observer and Shiny
+  # killed the whole session right after "Apply Mapping".
+  if (all(c("effort_conflicts", "effort_n_unique") %in% names(df))) {
+    effort_conflicts <- df %>%
+      dplyr::filter(effort_conflicts == TRUE) %>%
+      dplyr::distinct(year, fleet, effort_n_unique)
+  } else {
+    effort_conflicts <- df[0, , drop = FALSE]
+  }
   
   if (nrow(effort_conflicts) > 0) {
     findings$effort_conflicts <- list(
