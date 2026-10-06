@@ -52,85 +52,218 @@ mod_explore_server <- function(id, app_state) {
       all_windows <- app_state$dsi_results$dsi_all
       best_windows <- app_state$dsi_results$dsi_best
       
-      groups <- unique(all_windows$group_key)
+      # Detect if we have both species and fleet dimensions for matrix layout
+      has_species <- "species" %in% names(app_state$data_std)
+      has_fleet <- "fleet" %in% names(app_state$data_std)
+      use_matrix <- has_species && has_fleet
       
-      # Create grid of cells
-      cells <- lapply(groups, function(grp) {
-        grp_windows <- all_windows[all_windows$group_key == grp & all_windows$valid, ]
-        best <- best_windows[best_windows$group_key == grp, ]
+      if (use_matrix) {
+        # Extract species and fleet from group_key (format: "species___fleet")
+        best_windows$species_name <- sapply(strsplit(as.character(best_windows$group_key), "___"), `[`, 1)
+        best_windows$fleet_name <- sapply(strsplit(as.character(best_windows$group_key), "___"), `[`, 2)
         
-        if (nrow(grp_windows) == 0 || nrow(best) == 0) {
-          return(NULL)
-        }
+        species_list <- unique(best_windows$species_name)
+        fleet_list <- unique(best_windows$fleet_name)
         
-        # Order by start year
-        grp_windows <- grp_windows[order(grp_windows$start_year), ]
-        
-        best_dsi <- best$dsi_v2[1]
-        band <- get_dsi_band(best_dsi)
-        bg_color <- switch(band$label,
-          "Good" = "#009E73",
-          "Moderate" = "#E69F00",
-          "Poor" = "#D55E00",
-          "#CCCCCC"
-        )
-        
-        # Create sparkline data
-        spark_data <- paste0("[", paste(round(grp_windows$dsi_v2, 1), collapse = ","), "]")
-        
-        div(
-          class = "score-grid-cell",
-          style = sprintf("background-color: %s; border: 2px solid %s;", 
-                         paste0(bg_color, "20"), bg_color),
-          onclick = sprintf("Shiny.setInputValue('%s', '%s', {priority: 'event'});", 
-                          ns("cell_click"), grp),
-          div(class = "cell-title", grp),
-          div(class = "cell-score", sprintf("DSI: %.1f", best_dsi)),
-          div(class = "cell-band", band$label),
-          tags$canvas(
-            class = "sparkline-canvas",
-            `data-values` = spark_data,
-            width = "150",
-            height = "30"
+        # Create matrix layout
+        matrix_content <- tagList(
+          tags$style(HTML("
+            .dsi-matrix {
+              display: table;
+              border-collapse: separate;
+              border-spacing: 4px;
+              margin: 1rem 0;
+            }
+            .dsi-matrix-row {
+              display: table-row;
+            }
+            .dsi-matrix-header {
+              display: table-cell;
+              padding: 0.5rem;
+              font-weight: bold;
+              text-align: center;
+              background: #f5f5f5;
+              border: 1px solid #ddd;
+              font-size: 0.85rem;
+            }
+            .dsi-matrix-row-label {
+              display: table-cell;
+              padding: 0.5rem;
+              font-weight: bold;
+              text-align: right;
+              background: #f5f5f5;
+              border: 1px solid #ddd;
+              font-size: 0.85rem;
+              vertical-align: middle;
+            }
+            .dsi-matrix-cell {
+              display: table-cell;
+              width: 120px;
+              padding: 8px;
+              border-radius: 4px;
+              cursor: pointer;
+              transition: transform 0.15s;
+              vertical-align: top;
+              text-align: center;
+              font-size: 0.75rem;
+            }
+            .dsi-matrix-cell:hover {
+              transform: scale(1.08);
+              box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+              z-index: 10;
+            }
+            .dsi-matrix-cell .cell-score {
+              font-size: 1rem;
+              font-weight: bold;
+              margin: 3px 0;
+            }
+            .dsi-matrix-cell .cell-band {
+              font-size: 0.7rem;
+              margin-bottom: 6px;
+            }
+            .dsi-matrix-cell canvas {
+              margin: 0 auto;
+              display: block;
+            }
+          ")),
+          div(class = "dsi-matrix",
+            # Header row
+            div(class = "dsi-matrix-row",
+              div(class = "dsi-matrix-header", style = "width: 100px;", "Species \\ Fleet"),
+              lapply(fleet_list, function(f) {
+                div(class = "dsi-matrix-header", f)
+              })
+            ),
+            # Data rows
+            lapply(species_list, function(sp) {
+              div(class = "dsi-matrix-row",
+                div(class = "dsi-matrix-row-label", sp),
+                lapply(fleet_list, function(fl) {
+                  grp_key <- paste0(sp, "___", fl)
+                  best <- best_windows[best_windows$group_key == grp_key, ]
+                  
+                  if (nrow(best) == 0) {
+                    return(div(class = "dsi-matrix-cell", style = "background: #f0f0f0;", "—"))
+                  }
+                  
+                  grp_windows <- all_windows[all_windows$group_key == grp_key & all_windows$valid, ]
+                  grp_windows <- grp_windows[order(grp_windows$start_year), ]
+                  
+                  best_dsi <- best$dsi_v2[1]
+                  band <- get_dsi_band(best_dsi)
+                  bg_color <- switch(band$label,
+                    "Good" = "#009E73",
+                    "Moderate" = "#E69F00",
+                    "Poor" = "#D55E00",
+                    "#CCCCCC"
+                  )
+                  
+                  spark_data <- paste0("[", paste(round(grp_windows$dsi_v2, 1), collapse = ","), "]")
+                  
+                  div(
+                    class = "dsi-matrix-cell",
+                    style = sprintf("background-color: %s; border: 2px solid %s;", 
+                                   paste0(bg_color, "20"), bg_color),
+                    onclick = sprintf("Shiny.setInputValue('%s', '%s', {priority: 'event'});", 
+                                    ns("cell_click"), grp_key),
+                    div(class = "cell-score", sprintf("%.0f", best_dsi)),
+                    div(class = "cell-band", band$label),
+                    tags$canvas(
+                      class = "sparkline-canvas",
+                      `data-values` = spark_data,
+                      width = "100",
+                      height = "20"
+                    )
+                  )
+                })
+              )
+            })
           )
         )
-      })
+      } else {
+        # Simple flow layout for single dimension
+        groups <- unique(all_windows$group_key)
+        
+        cells <- lapply(groups, function(grp) {
+          grp_windows <- all_windows[all_windows$group_key == grp & all_windows$valid, ]
+          best <- best_windows[best_windows$group_key == grp, ]
+          
+          if (nrow(grp_windows) == 0 || nrow(best) == 0) {
+            return(NULL)
+          }
+          
+          grp_windows <- grp_windows[order(grp_windows$start_year), ]
+          
+          best_dsi <- best$dsi_v2[1]
+          band <- get_dsi_band(best_dsi)
+          bg_color <- switch(band$label,
+            "Good" = "#009E73",
+            "Moderate" = "#E69F00",
+            "Poor" = "#D55E00",
+            "#CCCCCC"
+          )
+          
+          spark_data <- paste0("[", paste(round(grp_windows$dsi_v2, 1), collapse = ","), "]")
+          
+          div(
+            class = "score-grid-cell",
+            style = sprintf("background-color: %s; border: 2px solid %s;", 
+                           paste0(bg_color, "20"), bg_color),
+            onclick = sprintf("Shiny.setInputValue('%s', '%s', {priority: 'event'});", 
+                            ns("cell_click"), grp),
+            div(class = "cell-title", grp),
+            div(class = "cell-score", sprintf("DSI: %.1f", best_dsi)),
+            div(class = "cell-band", band$label),
+            tags$canvas(
+              class = "sparkline-canvas",
+              `data-values` = spark_data,
+              width = "150",
+              height = "30"
+            )
+          )
+        })
+        
+        matrix_content <- tagList(
+          tags$style(HTML("
+            .score-grid-cell {
+              display: inline-block;
+              width: 200px;
+              margin: 10px;
+              padding: 15px;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: transform 0.2s;
+              vertical-align: top;
+            }
+            .score-grid-cell:hover {
+              transform: scale(1.05);
+              box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+            .cell-title {
+              font-weight: bold;
+              margin-bottom: 5px;
+              font-size: 14px;
+            }
+            .cell-score {
+              font-size: 18px;
+              font-weight: bold;
+              margin: 5px 0;
+            }
+            .cell-band {
+              font-size: 12px;
+              margin-bottom: 10px;
+            }
+            .sparkline-canvas {
+              display: block;
+              margin-top: 5px;
+            }
+          ")),
+          cells
+        )
+      }
       
       tagList(
-        tags$style(HTML("
-          .score-grid-cell {
-            display: inline-block;
-            width: 200px;
-            margin: 10px;
-            padding: 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            vertical-align: top;
-          }
-          .score-grid-cell:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-          }
-          .cell-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 14px;
-          }
-          .cell-score {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 5px 0;
-          }
-          .cell-band {
-            font-size: 12px;
-            margin-bottom: 10px;
-          }
-          .sparkline-canvas {
-            display: block;
-            margin-top: 5px;
-          }
-        ")),
+        matrix_content,
         tags$script(HTML("
           $(document).ready(function() {
             function drawSparkline(canvas) {
@@ -174,8 +307,7 @@ mod_explore_server <- function(id, app_state) {
               });
             }, 500);
           });
-        ")),
-        cells
+        "))
       )
     })
     
