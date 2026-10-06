@@ -47,10 +47,14 @@ docker run -p 43210:43210 dsi-studio
 
 ## Workflow
 
-1. **Data & Mapping** — Upload CSV/XLSX or load demo data, map columns (year, species, fleet, catch, effort, CPUE), configure effort semantics
-2. **Audit** — Review data quality issues (duplicates, conflicts, trailing missing CPUE)
-3. **Screen** — Select method profile, configure window settings, run DSI computation
-4. **Explore** — Review suitability matrix, explore window details, examine diagnostics
+The app is a six-step flow with a step rail on the left (a horizontal stepper on phones). Steps unlock in order; finished steps show a tick and a one-line status.
+
+1. **Data** — Upload CSV/XLSX or load an example dataset, map the columns (any names), and choose Effort Semantics. Each option shows how many rows of effort it would change; the choice is used in every computation.
+2. **Audit** — Data checks. A CPUE that is catch/effort times a constant (e.g. ×1,000) is reported as info only, because DSI is scale-invariant. Only a ratio that varies within a group is a warning.
+3. **Screen** — Method profile (Corrected or Legacy), window lengths and anchoring. All 29 scoring parameters sit under *Advanced parameters*, with the corrected defaults, a modified badge and a reset button.
+4. **Explore** — Score grid (species × fleet matrix when both are mapped) → group detail. Drag the window bar under the time series (or the range slider) and *Your window* is re-scored after you stop dragging. Includes a random-catch null test and a *Legacy vs Corrected* view that reverts one fix at a time.
+5. **Decide** — Accept, flag or reject each group's window (screened best or the one you pinned in Explore).
+6. **Report** — Self-contained HTML report and a ZIP with CSVs, settings, the input data, the DSI core and `reproduce_dsi_analysis.R`.
 
 ## Method Profiles
 
@@ -139,9 +143,9 @@ Package-like layer with no Shiny dependencies:
 
 ### Core Functions
 
-```r
-# Run tests
-testthat::test_dir("tests/testthat")
+```sh
+Rscript tests/testthat.R            # unit tests
+Rscript tools/check_legacy_parity.R # app Legacy vs the original scripts (live run + shipped CSVs)
 ```
 
 Tests cover:
@@ -156,16 +160,14 @@ Tests cover:
 
 Legacy mode outputs have been verified against the original scripts on example data:
 
-```r
-# See run/01_DSI_screening/ for verification outputs
-```
+`tools/check_legacy_parity.R` runs the original scripts in `uploads/dsi/src` on the example data and compares every window with the app's Legacy profile (132/132 main groups, 493/493 species × fleet, max |Δ| < 1e-13). See `LEGACY_PARITY_RESULTS.md`.
 
 ## Known Limitations
 
 1. **No model fitting yet**: App stops at screening/selection. Fox/Schaefer fitting step not implemented (code is structured to add this).
-2. **Laptop-first**: Responsive design optimized for ≥992px width. Mobile not targeted.
+2. **Phone layout**: Usable at 400px (stepper, compact matrix, stacked charts), but dense tables scroll horizontally.
 3. **Limited fleet handling**: Selection currently per species × fleet. Pooled selection logic is configurable.
-4. **No null-model test**: Permutation test for spurious slope (mentioned in PROPOSAL.md) not yet implemented.
+4. **Null test is per window**: The random-catch test runs for one group/window at a time (a few seconds for 199 runs on the example data).
 
 ## DSI Band Interpretation
 
@@ -186,14 +188,7 @@ All bands are **double-encoded** (color + text label).
 
 ## Export & Reproducibility
 
-*(To be implemented)*
-
-Planned export bundle will include:
-
-- `dsi_config.yaml` — Settings, mapping, method profile
-- `run_dsi.R` — Standalone script to reproduce results
-- CSVs — All windows, best windows, decision ledger
-- Quarto report — HTML/PDF/DOCX with figures and interpretation
+The ZIP from the Report step contains `dsi_config.yaml`, `dsi_settings.yaml`, CSVs (all windows, best, selected, decision ledger, null tests, comparison), `dsi_report.html`, `data/input_data.csv`, `dsicore/` and `reproduce_dsi_analysis.R`. Running the script in the unzipped folder recomputes every window and prints `REPRODUCED` if the scores, best windows and selected windows match the export.
 
 ## Development
 

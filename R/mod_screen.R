@@ -115,7 +115,8 @@ mod_screen_server <- function(id, app_state) {
     output$effort_line <- renderUI({
       es <- app_state$effort_semantics
       lab <- c(per_row = "each row keeps its own effort", per_group_year = "one effort per group and year",
-               per_fleet_year = "effort shared within fleet-year")[[es]]
+               per_fleet_year = if ("fleet" %in% app_state$group_cols) "effort shared within fleet-year"
+                                else "one effort shared by all groups in a year")[[es]]
       div(class = "muted", style = "font-size:12.5px;",
           "Effort semantics: ", strong(lab),
           if (identical(input$method, "legacy")) " (ignored by Legacy, which copies the first value per year \u00d7 fleet)",

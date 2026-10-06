@@ -49,7 +49,7 @@ mod_compare_server <- function(id, app_state) {
       both <- w[w$in_both, ]
       a$impact <- a$windows_changed + a$windows_added_or_removed
       top <- a[order(-a$groups_ready_changed, -a$impact, -a$mean_abs_delta), ][1, ]
-      n_both <- sum(w$in_both %in% TRUE)
+      n_both <- sum(w$in_both %in% TRUE & is.finite(w$dsi_v2_legacy) & is.finite(w$dsi_v2_corrected))
       lead <- sprintf("Largest driver: %s. Reverting it changes %d of %d windows%s%s%s.",
                       top$label, top$windows_changed, top$windows_compared,
                       if (top$windows_changed > 0) sprintf(" (mean |\u0394| %.1f DSI_v2 points across compared windows)", top$mean_abs_delta) else "",
@@ -67,7 +67,7 @@ mod_compare_server <- function(id, app_state) {
             metric_box(format_dsi_score(mean(abs(both$d_dsi_v2), na.rm = TRUE), 1), "Mean |\u0394 DSI_v2|")),
           div(class = "callout", id = ns("compare_headline"), lead),
           if (n_both == 0) div(class = "callout warn", style = "margin-top:8px;",
-            "No window appears in both runs: Legacy windows all end at the last calendar year, corrected windows end at each group's last usable year. Compare the per-group table below; the per-window \u0394 columns show the effect of each fix on the corrected windows.")),
+            "No window has a valid DSI_v2 in both runs: Legacy windows end at the last calendar year, corrected windows end at each group's last usable year. Compare the per-group table below; the per-window \u0394 columns show the effect of each fix on the corrected windows.")),
         div(class = "dsi-grid-2",
           dsi_card(title = "Which fixes drive the difference",
             p(class = "help", "Bar = windows whose DSI_v2 changes, or that appear or disappear, when that one correction is reverted from the corrected run. Label: count (mean |\u0394 DSI_v2| across windows present in both runs). Fixes interact, so bars do not add up to the total."),
@@ -75,7 +75,7 @@ mod_compare_server <- function(id, app_state) {
           dsi_card(title = "Per window: Legacy vs Corrected DSI_v2",
             p(class = "help", "Each point is one window present in both runs. Points off the diagonal changed."),
             if (n_both > 0) echarts4rOutput(ns("scatter_chart"), height = "260px")
-            else p(class = "muted", style = "padding:30px 0;text-align:center;", "No window is present in both runs."))),
+            else p(class = "muted", style = "padding:30px 0;text-align:center;", "No window has a valid DSI_v2 in both runs."))),
         dsi_card(title = "The corrections",
           div(class = "table-wrap", tags$table(class = "dsi-table fix-table",
             tags$thead(tags$tr(tags$th("Fix"), tags$th("Legacy (original)"), tags$th("Corrected"),
