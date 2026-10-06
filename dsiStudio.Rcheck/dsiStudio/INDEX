@@ -1,0 +1,84 @@
+.append_reason          Append reason code
+.psi_numeric            Population Stability Index
+.safe_ks_pvalue         Safe KS test p-value
+.safe_spearman          Safe Spearman correlation
+.score_drift            Score drift between two periods
+.year_in_window         Check if year is in window
+audit_data              Audit data quality
+check_cpue_scale        Check whether a mapped CPUE column is catch /
+                        effort (up to a unit scale)
+clamp01                 Clamp values to 0, 1
+compute_data_hash       Compute data hash for caching
+compute_dsi             Compute DSI score (with outlier penalty)
+compute_dsi_base        Compute DSI base score
+compute_dsi_v2_robust   Compute DSI_v2 robust score
+compute_window_metrics
+                        Compute per-window metrics
+compute_window_metrics_corrected
+                        Compute per-window metrics (CORRECTED VERSION)
+compute_window_v2_metrics_corrected
+                        Compute v2 robustness metrics (CORRECTED
+                        VERSION)
+create_sparkline_svg    Create a simple sparkline SVG
+default_dsi_refs        Default reference values for DSI computation
+default_dsi_weights     Default DSI weight configuration
+default_selection_opts
+                        Default selection options
+dsi_band_colors         DSI band colors (Okabe-Ito, colour-blind safe)
+dsi_build_html_report   Build a self-contained HTML summary report
+dsi_compare_methods     Legacy vs Corrected comparison with per-fix
+                        attribution
+dsi_fix_catalog         Catalogue of the corrections applied by the
+                        "corrected" method
+dsi_fix_flags           Bug-fix switches for a method profile
+dsi_group_summary       Per-group summary used by Decide, the HTML
+                        report and the export
+dsi_null_test           Random-catch null test for one window
+dsi_theme               Create DSI Studio bslib theme
+effort_semantics_impact
+                        Preview the effect of each Effort Semantics
+                        option
+effort_structure        Describe how effort is structured across groups
+format_beta             Format a regression slope for people
+format_dsi_score        Format DSI score for display
+format_p                Format a p-value
+generate_all_windows    Get all windows for all groups
+generate_windows_corrected
+                        Generate time windows (CORRECTED VERSION)
+get_dsi_band            Get DSI band label and color
+guess_column_mapping    Guess column mapping from data frame
+harmonize_effort_corrected
+                        Harmonize effort values
+interpret_window        Generate plain-language interpretation for a
+                        window
+load_demo_data          Load demo dataset
+make_group_key          Create group key from grouping columns
+mod_audit_server        Audit server
+mod_audit_ui            Audit UI
+mod_compare_server      Comparison server
+mod_compare_ui          Comparison UI
+mod_context_rail_server
+                        Context rail server
+mod_context_rail_ui     Context rail UI
+mod_data_input_server   Data input server
+mod_data_input_ui       Data input UI
+mod_decide_server       Decide server
+mod_decide_ui           Decide UI
+mod_explore_server      Explore server
+mod_explore_ui          Explore UI
+mod_report_server       Report server
+mod_report_ui           Report UI
+mod_screen_server       Screen server
+mod_screen_ui           Screen UI
+rescore_with_weights    Re-score windows with different weights without
+                        refitting
+run_app                 Run DSI Studio application
+run_dsi_workflow        Run complete DSI screening workflow
+safe_log_cpue           Safe log transformation of CPUE
+score_window            Score a single window (convenience wrapper)
+select_best_window      Select best window per group
+select_best_window_corrected
+                        Select best window per group (CORRECTED
+                        VERSION)
+standardize_columns     Standardize column names and types
+theme_dsi               ggplot2 theme for DSI plots

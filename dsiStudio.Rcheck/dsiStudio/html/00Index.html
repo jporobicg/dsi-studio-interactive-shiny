@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head><title>R: DSI Studio - Data Suitability Index Screening Tool</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+<link rel="stylesheet" type="text/css" href="R.css" />
+</head><body><div class="container">
+<h1> DSI Studio - Data Suitability Index Screening Tool
+<img class="toplogo" src="../../../doc/html/Rlogo.svg" alt="[R logo]" />
+</h1>
+<hr/>
+<div style="text-align: center;">
+<a href="../../../doc/html/packages.html"><img class="arrow" src="../../../doc/html/left.jpg" alt="[Up]" /></a>
+<a href="../../../doc/html/index.html"><img class="arrow" src="../../../doc/html/up.jpg" alt="[Top]" /></a>
+</div><h2>Documentation for package &lsquo;dsiStudio&rsquo; version 0.1.0</h2>
+
+<ul><li><a href="../DESCRIPTION">DESCRIPTION file</a>.</li>
+</ul>
+
+<h2>Help Pages</h2>
+
+
+<table style="width: 100%;">
+<tr><td style="width: 25%;"><a href="dot-append_reason.html">.append_reason</a></td>
+<td>Append reason code</td></tr>
+<tr><td style="width: 25%;"><a href="dot-psi_numeric.html">.psi_numeric</a></td>
+<td>Population Stability Index</td></tr>
+<tr><td style="width: 25%;"><a href="dot-safe_ks_pvalue.html">.safe_ks_pvalue</a></td>
+<td>Safe KS test p-value</td></tr>
+<tr><td style="width: 25%;"><a href="dot-safe_spearman.html">.safe_spearman</a></td>
+<td>Safe Spearman correlation</td></tr>
+<tr><td style="width: 25%;"><a href="dot-score_drift.html">.score_drift</a></td>
+<td>Score drift between two periods</td></tr>
+<tr><td style="width: 25%;"><a href="dot-year_in_window.html">.year_in_window</a></td>
+<td>Check if year is in window</td></tr>
+<tr><td style="width: 25%;"><a href="audit_data.html">audit_data</a></td>
+<td>Audit data quality</td></tr>
+<tr><td style="width: 25%;"><a href="check_cpue_scale.html">check_cpue_scale</a></td>
+<td>Check whether a mapped CPUE column is catch / effort (up to a unit scale)</td></tr>
+<tr><td style="width: 25%;"><a href="clamp01.html">clamp01</a></td>
+<td>Clamp values to 0, 1</td></tr>
+<tr><td style="width: 25%;"><a href="compute_data_hash.html">compute_data_hash</a></td>
+<td>Compute data hash for caching</td></tr>
+<tr><td style="width: 25%;"><a href="compute_dsi.html">compute_dsi</a></td>
+<td>Compute DSI score (with outlier penalty)</td></tr>
+<tr><td style="width: 25%;"><a href="compute_dsi_base.html">compute_dsi_base</a></td>
+<td>Compute DSI base score</td></tr>
+<tr><td style="width: 25%;"><a href="compute_dsi_v2_robust.html">compute_dsi_v2_robust</a></td>
+<td>Compute DSI_v2 robust score</td></tr>
+<tr><td style="width: 25%;"><a href="compute_window_metrics.html">compute_window_metrics</a></td>
+<td>Compute per-window metrics</td></tr>
+<tr><td style="width: 25%;"><a href="compute_window_metrics_corrected.html">compute_window_metrics_corrected</a></td>
+<td>Compute per-window metrics (CORRECTED VERSION)</td></tr>
+<tr><td style="width: 25%;"><a href="compute_window_v2_metrics_corrected.html">compute_window_v2_metrics_corrected</a></td>
+<td>Compute v2 robustness metrics (CORRECTED VERSION)</td></tr>
+<tr><td style="width: 25%;"><a href="create_sparkline_svg.html">create_sparkline_svg</a></td>
+<td>Create a simple sparkline SVG</td></tr>
+<tr><td style="width: 25%;"><a href="default_dsi_refs.html">default_dsi_refs</a></td>
+<td>Default reference values for DSI computation</td></tr>
+<tr><td style="width: 25%;"><a href="default_dsi_weights.html">default_dsi_weights</a></td>
+<td>Default DSI weight configuration</td></tr>
+<tr><td style="width: 25%;"><a href="default_selection_opts.html">default_selection_opts</a></td>
+<td>Default selection options</td></tr>
+<tr><td style="width: 25%;"><a href="dsi_band_colors.html">dsi_band_colors</a></td>
+<td>DSI band colors (Okabe-Ito, colour-blind safe)</td></tr>
+<tr><td style="width: 25%;"><a href="dsi_build_html_report.html">dsi_build_html_report</a></td>
+<td>Build a self-contained HTML summary report</td></tr>
+<tr><td style="width: 25%;"><a href="dsi_compare_methods.html">dsi_compare_methods</a></td>
+<td>Legacy vs Corrected comparison with per-fix attribution</td></tr>
+<tr><td style="width: 25%;"><a href="dsi_fix_catalog.html">dsi_fix_catalog</a></td>
+<td>Catalogue of the corrections applied by the "corrected" method</td></tr>
+<tr><td style="width: 25%;"><a href="dsi_fix_flags.html">dsi_fix_flags</a></td>
+<td>Bug-fix switches for a method profile</td></tr>
+<tr><td style="width: 25%;"><a href="dsi_group_summary.html">dsi_group_summary</a></td>
+<td>Per-group summary used by Decide, the HTML report and the export</td></tr>
+<tr><td style="width: 25%;"><a href="dsi_null_test.html">dsi_null_test</a></td>
+<td>Random-catch null test for one window</td></tr>
+<tr><td style="width: 25%;"><a href="dsi_theme.html">dsi_theme</a></td>
+<td>Create DSI Studio bslib theme</td></tr>
+<tr><td style="width: 25%;"><a href="effort_semantics_impact.html">effort_semantics_impact</a></td>
+<td>Preview the effect of each Effort Semantics option</td></tr>
+<tr><td style="width: 25%;"><a href="effort_structure.html">effort_structure</a></td>
+<td>Describe how effort is structured across groups</td></tr>
+<tr><td style="width: 25%;"><a href="format_beta.html">format_beta</a></td>
+<td>Format a regression slope for people</td></tr>
+<tr><td style="width: 25%;"><a href="format_dsi_score.html">format_dsi_score</a></td>
+<td>Format DSI score for display</td></tr>
+<tr><td style="width: 25%;"><a href="format_p.html">format_p</a></td>
+<td>Format a p-value</td></tr>
+<tr><td style="width: 25%;"><a href="generate_all_windows.html">generate_all_windows</a></td>
+<td>Get all windows for all groups</td></tr>
+<tr><td style="width: 25%;"><a href="generate_windows_corrected.html">generate_windows_corrected</a></td>
+<td>Generate time windows (CORRECTED VERSION)</td></tr>
+<tr><td style="width: 25%;"><a href="get_dsi_band.html">get_dsi_band</a></td>
+<td>Get DSI band label and color</td></tr>
+<tr><td style="width: 25%;"><a href="guess_column_mapping.html">guess_column_mapping</a></td>
+<td>Guess column mapping from data frame</td></tr>
+<tr><td style="width: 25%;"><a href="harmonize_effort_corrected.html">harmonize_effort_corrected</a></td>
+<td>Harmonize effort values</td></tr>
+<tr><td style="width: 25%;"><a href="interpret_window.html">interpret_window</a></td>
+<td>Generate plain-language interpretation for a window</td></tr>
+<tr><td style="width: 25%;"><a href="load_demo_data.html">load_demo_data</a></td>
+<td>Load demo dataset</td></tr>
+<tr><td style="width: 25%;"><a href="make_group_key.html">make_group_key</a></td>
+<td>Create group key from grouping columns</td></tr>
+<tr><td style="width: 25%;"><a href="mod_audit_server.html">mod_audit_server</a></td>
+<td>Audit server</td></tr>
+<tr><td style="width: 25%;"><a href="mod_audit_ui.html">mod_audit_ui</a></td>
+<td>Audit UI</td></tr>
+<tr><td style="width: 25%;"><a href="mod_compare_server.html">mod_compare_server</a></td>
+<td>Comparison server</td></tr>
+<tr><td style="width: 25%;"><a href="mod_compare_ui.html">mod_compare_ui</a></td>
+<td>Comparison UI</td></tr>
+<tr><td style="width: 25%;"><a href="mod_context_rail_server.html">mod_context_rail_server</a></td>
+<td>Context rail server</td></tr>
+<tr><td style="width: 25%;"><a href="mod_context_rail_ui.html">mod_context_rail_ui</a></td>
+<td>Context rail UI</td></tr>
+<tr><td style="width: 25%;"><a href="mod_data_input_server.html">mod_data_input_server</a></td>
+<td>Data input server</td></tr>
+<tr><td style="width: 25%;"><a href="mod_data_input_ui.html">mod_data_input_ui</a></td>
+<td>Data input UI</td></tr>
+<tr><td style="width: 25%;"><a href="mod_decide_server.html">mod_decide_server</a></td>
+<td>Decide server</td></tr>
+<tr><td style="width: 25%;"><a href="mod_decide_ui.html">mod_decide_ui</a></td>
+<td>Decide UI</td></tr>
+<tr><td style="width: 25%;"><a href="mod_explore_server.html">mod_explore_server</a></td>
+<td>Explore server</td></tr>
+<tr><td style="width: 25%;"><a href="mod_explore_ui.html">mod_explore_ui</a></td>
+<td>Explore UI</td></tr>
+<tr><td style="width: 25%;"><a href="mod_report_server.html">mod_report_server</a></td>
+<td>Report server</td></tr>
+<tr><td style="width: 25%;"><a href="mod_report_ui.html">mod_report_ui</a></td>
+<td>Report UI</td></tr>
+<tr><td style="width: 25%;"><a href="mod_screen_server.html">mod_screen_server</a></td>
+<td>Screen server</td></tr>
+<tr><td style="width: 25%;"><a href="mod_screen_ui.html">mod_screen_ui</a></td>
+<td>Screen UI</td></tr>
+<tr><td style="width: 25%;"><a href="rescore_with_weights.html">rescore_with_weights</a></td>
+<td>Re-score windows with different weights without refitting</td></tr>
+<tr><td style="width: 25%;"><a href="run_app.html">run_app</a></td>
+<td>Run DSI Studio application</td></tr>
+<tr><td style="width: 25%;"><a href="run_dsi_workflow.html">run_dsi_workflow</a></td>
+<td>Run complete DSI screening workflow</td></tr>
+<tr><td style="width: 25%;"><a href="safe_log_cpue.html">safe_log_cpue</a></td>
+<td>Safe log transformation of CPUE</td></tr>
+<tr><td style="width: 25%;"><a href="score_window.html">score_window</a></td>
+<td>Score a single window (convenience wrapper)</td></tr>
+<tr><td style="width: 25%;"><a href="select_best_window.html">select_best_window</a></td>
+<td>Select best window per group</td></tr>
+<tr><td style="width: 25%;"><a href="select_best_window_corrected.html">select_best_window_corrected</a></td>
+<td>Select best window per group (CORRECTED VERSION)</td></tr>
+<tr><td style="width: 25%;"><a href="standardize_columns.html">standardize_columns</a></td>
+<td>Standardize column names and types</td></tr>
+<tr><td style="width: 25%;"><a href="theme_dsi.html">theme_dsi</a></td>
+<td>ggplot2 theme for DSI plots</td></tr>
+</table>
+</div></body></html>

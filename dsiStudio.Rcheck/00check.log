@@ -1,0 +1,686 @@
+* using log directory ‘/workspace/dsi-studio-interactive-shiny/dsiStudio.Rcheck’
+* using R version 4.3.3 (2024-02-29)
+* using platform: x86_64-pc-linux-gnu (64-bit)
+* R was compiled by
+    gcc (Ubuntu 13.2.0-23ubuntu3) 13.2.0
+    GNU Fortran (Ubuntu 13.2.0-23ubuntu3) 13.2.0
+* running under: Ubuntu 24.04.4 LTS
+* using session charset: UTF-8
+* using option ‘--no-manual’
+* checking for file ‘dsiStudio/DESCRIPTION’ ... OK
+* this is package ‘dsiStudio’ version ‘0.1.0’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... NOTE
+Packages suggested but not available for checking: 'shinytest2', 'vdiffr'
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘dsiStudio’ can be installed ... WARNING
+Found the following significant warnings:
+  Warning: check_cpue_scale.Rd:16: unexpected section header '\value'
+  Warning: check_cpue_scale.Rd:20: unexpected section header '\description'
+  Warning: check_cpue_scale.Rd:26: unexpected END_OF_INPUT '
+  Warning: grapes-or-or-grapes.Rd: \name should not contain !, | or @
+See ‘/workspace/dsi-studio-interactive-shiny/dsiStudio.Rcheck/00install.out’ for details.
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking DESCRIPTION meta-information ... OK
+* checking top-level files ... OK
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... OK
+* checking R files for non-ASCII characters ... WARNING
+Found the following file with non-ASCII characters:
+  dsicore_selection.R
+Portable packages must use only ASCII characters in their R code,
+except perhaps in comments.
+Use \uxxxx escapes for other characters.
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking dependencies in R code ... WARNING
+'::' or ':::' imports not declared from:
+  ‘base64enc’ ‘htmltools’
+Namespace in Imports field not imported from: ‘echarts4r’
+  All declared Imports should be used.
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+.ctx: no visible global function definition for ‘div’
+audit_data: no visible global function definition for ‘%>%’
+audit_data: no visible binding for global variable ‘year’
+audit_data: no visible binding for global variable ‘fleet’
+audit_data: no visible binding for global variable ‘effort_n_unique’
+audit_data: no visible binding for global variable ‘cpue’
+audit_data: no visible binding for global variable ‘usable_cpue’
+audit_data: no visible binding for global variable ‘max_year’
+audit_data: no visible binding for global variable ‘last_usable_year’
+audit_data: no visible binding for global variable ‘trailing_years’
+check_cpue_scale: no visible global function definition for ‘%>%’
+check_cpue_scale: no visible binding for global variable ‘group_key’
+check_cpue_scale: no visible binding for global variable ‘ratio’
+check_cpue_scale: no visible binding for global variable ‘n_off’
+check_cpue_scale: no visible binding for global variable ‘n_rows’
+context_strip_ui : chip: no visible global function definition for
+  ‘span’
+context_strip_ui : chip: no visible binding for global variable ‘tags’
+context_strip_ui: no visible global function definition for ‘div’
+dsi_build_html_report: no visible binding for global variable
+  ‘selected_dsi_v2’
+dsi_build_html_report: no visible binding for global variable
+  ‘group_key’
+dsi_build_html_report: no visible binding for global variable ‘band’
+dsi_build_html_report: no visible binding for global variable
+  ‘start_year’
+dsi_build_html_report: no visible binding for global variable ‘dsi_v2’
+dsi_build_html_report: no visible global function definition for ‘head’
+dsi_build_html_report: no visible binding for global variable ‘year’
+dsi_build_html_report: no visible binding for global variable
+  ‘selected_start’
+dsi_build_html_report: no visible binding for global variable
+  ‘selected_end’
+dsi_build_html_report: no visible binding for global variable ‘cpue_s’
+dsi_build_html_report: no visible binding for global variable
+  ‘effort_s’
+dsi_build_html_report: no visible binding for global variable
+  ‘observed’
+dsi_build_html_report: no visible binding for global variable
+  ‘mean_abs_delta’
+dsi_build_html_report: no visible binding for global variable ‘label’
+dsi_card: no visible global function definition for ‘div’
+dsi_card: no visible global function definition for ‘h3’
+dsi_custom_css: no visible binding for global variable ‘tags’
+dsi_custom_css: no visible global function definition for ‘HTML’
+dsi_theme: no visible global function definition for ‘bs_theme’
+dsi_theme: no visible global function definition for ‘font_google’
+dsi_v2_limiters_ui: no visible global function definition for ‘div’
+dsi_v2_limiters_ui: no visible global function definition for ‘span’
+dsi_v2_limiters_ui : <anonymous>: no visible global function definition
+  for ‘span’
+effort_structure: no visible global function definition for ‘%>%’
+effort_structure: no visible binding for global variable ‘effort’
+effort_structure: no visible binding for global variable ‘year’
+effort_structure: no visible binding for global variable ‘fleet’
+harmonize_effort_corrected: no visible global function definition for
+  ‘%>%’
+harmonize_effort_corrected: no visible binding for global variable
+  ‘effort’
+metric_box: no visible global function definition for ‘div’
+mod_audit_server: no visible global function definition for
+  ‘moduleServer’
+mod_audit_server : <anonymous>: no visible global function definition
+  for ‘renderUI’
+mod_audit_server : <anonymous>: no visible global function definition
+  for ‘div’
+mod_audit_server : <anonymous>: no visible global function definition
+  for ‘tagList’
+mod_audit_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘div’
+mod_audit_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘h5’
+mod_audit_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘p’
+mod_audit_server : <anonymous> : <anonymous>: no visible binding for
+  global variable ‘tags’
+mod_audit_server : <anonymous>: no visible global function definition
+  for ‘observe’
+mod_audit_ui: no visible global function definition for ‘NS’
+mod_audit_ui: no visible global function definition for ‘tagList’
+mod_audit_ui: no visible global function definition for ‘uiOutput’
+mod_audit_ui: no visible global function definition for ‘div’
+mod_compare_server: no visible global function definition for
+  ‘moduleServer’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘observeEvent’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘req’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘withProgress’
+mod_compare_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘setProgress’
+mod_compare_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘showNotification’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘renderUI’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘div’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘p’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘tagList’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘echarts4rOutput’
+mod_compare_server : <anonymous>: no visible binding for global
+  variable ‘tags’
+mod_compare_server : <anonymous> : <anonymous>: no visible binding for
+  global variable ‘tags’
+mod_compare_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘strong’
+mod_compare_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘span’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘renderEcharts4r’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_animation’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_tooltip’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_legend’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_grid’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_flip_coords’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_bar’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_charts’
+mod_compare_server : <anonymous>: no visible binding for global
+  variable ‘label’
+mod_compare_server : <anonymous>: no visible binding for global
+  variable ‘affected’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_y_axis’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_x_axis’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_line’
+mod_compare_server : <anonymous>: no visible global function definition
+  for ‘e_scatter’
+mod_compare_server : <anonymous>: no visible binding for global
+  variable ‘dsi_v2_legacy’
+mod_compare_server : <anonymous>: no visible binding for global
+  variable ‘dsi_v2_corrected’
+mod_compare_server : <anonymous>: no visible binding for global
+  variable ‘fix’
+mod_compare_server : <anonymous>: no visible binding for global
+  variable ‘delta’
+mod_compare_ui: no visible global function definition for ‘NS’
+mod_compare_ui: no visible global function definition for ‘tagList’
+mod_compare_ui: no visible global function definition for ‘p’
+mod_compare_ui: no visible global function definition for
+  ‘actionButton’
+mod_compare_ui: no visible global function definition for ‘icon’
+mod_compare_ui: no visible global function definition for ‘uiOutput’
+mod_context_rail_server: no visible global function definition for
+  ‘moduleServer’
+mod_context_rail_server : <anonymous>: no visible global function
+  definition for ‘renderUI’
+mod_context_rail_server : <anonymous>: no visible global function
+  definition for ‘tagList’
+mod_context_rail_server : <anonymous>: no visible global function
+  definition for ‘span’
+mod_context_rail_ui: no visible global function definition for ‘NS’
+mod_context_rail_ui: no visible global function definition for
+  ‘uiOutput’
+mod_data_input_server: no visible global function definition for
+  ‘moduleServer’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘observeEvent’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘req’
+mod_data_input_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘showNotification’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘renderUI’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘fileInput’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘div’
+mod_data_input_server : <anonymous>: no visible binding for global
+  variable ‘tags’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘span’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘h4’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘p’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘tagList’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘h3’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘br’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘head’
+mod_data_input_server : <anonymous> : sel: no visible global function
+  definition for ‘div’
+mod_data_input_server : <anonymous> : sel: no visible global function
+  definition for ‘selectInput’
+mod_data_input_server : <anonymous> : sel: no visible global function
+  definition for ‘tagList’
+mod_data_input_server : <anonymous> : sel: no visible global function
+  definition for ‘span’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘uiOutput’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘actionButton’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘icon’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘reactive’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘showNotification’
+mod_data_input_server : <anonymous> : desc: no visible global function
+  definition for ‘span’
+mod_data_input_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘tagList’
+mod_data_input_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘strong’
+mod_data_input_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘br’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘radioButtons’
+mod_data_input_server : <anonymous>: no visible global function
+  definition for ‘isolate’
+mod_data_input_ui: no visible global function definition for ‘NS’
+mod_data_input_ui: no visible global function definition for ‘tagList’
+mod_data_input_ui: no visible global function definition for ‘uiOutput’
+mod_decide_server: no visible global function definition for
+  ‘moduleServer’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘reactive’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘req’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘isolate’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘renderUI’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘div’
+mod_decide_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘isolate’
+mod_decide_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘tagList’
+mod_decide_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘span’
+mod_decide_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘div’
+mod_decide_server : <anonymous> : <anonymous>: no visible binding for
+  global variable ‘tags’
+mod_decide_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘radioButtons’
+mod_decide_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘textAreaInput’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘tagList’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘observeEvent’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘updateRadioButtons’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘showNotification’
+mod_decide_server : <anonymous> : save: no visible global function
+  definition for ‘showNotification’
+mod_decide_server : <anonymous>: no visible global function definition
+  for ‘span’
+mod_decide_ui: no visible global function definition for ‘NS’
+mod_decide_ui: no visible global function definition for ‘tagList’
+mod_decide_ui: no visible global function definition for ‘div’
+mod_decide_ui: no visible global function definition for ‘radioButtons’
+mod_decide_ui: no visible global function definition for ‘actionButton’
+mod_decide_ui: no visible global function definition for ‘icon’
+mod_decide_ui: no visible global function definition for ‘uiOutput’
+mod_explore_server: no visible global function definition for
+  ‘moduleServer’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘renderUI’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘req’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘p’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘div’
+mod_explore_server : <anonymous> : spark: no visible global function
+  definition for ‘HTML’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘span’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘tags’
+mod_explore_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘div’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘tagList’
+mod_explore_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘span’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘observeEvent’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘reactive’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘reactiveVal’
+mod_explore_server : <anonymous> : init_window: no visible global
+  function definition for ‘isolate’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘observe’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘debounce’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘updateSliderInput’
+mod_explore_server : <anonymous> : set_window: no visible global
+  function definition for ‘updateSliderInput’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘showNotification’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘isolate’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘h3’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘uiOutput’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘echarts4rOutput’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘sliderInput’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘actionButton’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘icon’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘plotOutput’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘selectInput’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘numericInput’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘conditionalPanel’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘renderEcharts4r’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_animation’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_tooltip’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_legend’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_grid’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_x_axis’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_flip_coords’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_bar’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_charts’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘component’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘yours’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_y_axis’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_mark_line’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘e_line’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘x’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘dsi_v2’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘label’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘renderPlot’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘plot.new’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘text’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘lm’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘fitted’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘rstandard’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘ggplot’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘aes’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘effort’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘log_cpue’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘geom_point’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘geom_smooth’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘labs’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘year’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘std_resid’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘geom_hline’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘geom_line’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘withProgress’
+mod_explore_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘setProgress’
+mod_explore_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘showNotification’
+mod_explore_server : <anonymous>: no visible global function definition
+  for ‘outputOptions’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘bin’
+mod_explore_server : <anonymous>: no visible binding for global
+  variable ‘count’
+mod_explore_ui: no visible global function definition for ‘NS’
+mod_explore_ui: no visible global function definition for ‘tagList’
+mod_explore_ui: no visible global function definition for ‘div’
+mod_explore_ui: no visible global function definition for
+  ‘radioButtons’
+mod_explore_ui: no visible global function definition for
+  ‘conditionalPanel’
+mod_explore_ui: no visible global function definition for ‘uiOutput’
+mod_report_server: no visible global function definition for
+  ‘moduleServer’
+mod_report_server : <anonymous>: no visible global function definition
+  for ‘renderUI’
+mod_report_server : <anonymous>: no visible global function definition
+  for ‘div’
+mod_report_server : <anonymous>: no visible global function definition
+  for ‘downloadHandler’
+mod_report_server : <anonymous> : <anonymous>: no visible global
+  function definition for ‘req’
+mod_report_ui: no visible global function definition for ‘NS’
+mod_report_ui: no visible global function definition for ‘tagList’
+mod_report_ui: no visible global function definition for ‘uiOutput’
+mod_report_ui: no visible global function definition for ‘div’
+mod_report_ui: no visible global function definition for ‘p’
+mod_report_ui: no visible global function definition for
+  ‘downloadButton’
+mod_report_ui: no visible global function definition for
+  ‘checkboxGroupInput’
+mod_report_ui: no visible global function definition for ‘textInput’
+mod_screen_server: no visible global function definition for
+  ‘moduleServer’
+mod_screen_server : <anonymous>: no visible global function definition
+  for ‘observeEvent’
+mod_screen_server : <anonymous>: no visible global function definition
+  for ‘renderUI’
+mod_screen_server : <anonymous>: no visible global function definition
+  for ‘div’
+mod_screen_server : <anonymous>: no visible global function definition
+  for ‘strong’
+mod_screen_server : <anonymous>: no visible binding for global variable
+  ‘tags’
+mod_screen_server : <anonymous>: no visible global function definition
+  for ‘reactive’
+mod_screen_server : <anonymous> : adv_badge_ui: no visible global
+  function definition for ‘span’
+mod_screen_server : <anonymous>: no visible global function definition
+  for ‘updateNumericInput’
+mod_screen_server : <anonymous> : run_screening: no visible global
+  function definition for ‘req’
+mod_screen_server : <anonymous> : run_screening: no visible global
+  function definition for ‘showNotification’
+mod_screen_server : <anonymous> : run_screening: no visible global
+  function definition for ‘withProgress’
+mod_screen_server : <anonymous> : run_screening : <anonymous>: no
+  visible global function definition for ‘setProgress’
+mod_screen_server : <anonymous> : run_screening : <anonymous>: no
+  visible global function definition for ‘showNotification’
+mod_screen_server : <anonymous>: no visible global function definition
+  for ‘req’
+mod_screen_server : <anonymous>: no visible global function definition
+  for ‘tagList’
+mod_screen_ui: no visible global function definition for ‘NS’
+mod_screen_ui : <anonymous>: no visible binding for global variable
+  ‘tags’
+mod_screen_ui : <anonymous>: no visible global function definition for
+  ‘p’
+mod_screen_ui : <anonymous>: no visible global function definition for
+  ‘div’
+mod_screen_ui : <anonymous> : <anonymous>: no visible global function
+  definition for ‘div’
+mod_screen_ui : <anonymous> : <anonymous>: no visible global function
+  definition for ‘numericInput’
+mod_screen_ui : <anonymous> : <anonymous>: no visible global function
+  definition for ‘tagList’
+mod_screen_ui : <anonymous> : <anonymous>: no visible global function
+  definition for ‘span’
+mod_screen_ui : <anonymous>: no visible global function definition for
+  ‘uiOutput’
+mod_screen_ui: no visible global function definition for ‘tagList’
+mod_screen_ui: no visible global function definition for ‘div’
+mod_screen_ui: no visible global function definition for ‘radioButtons’
+mod_screen_ui: no visible global function definition for ‘uiOutput’
+mod_screen_ui: no visible global function definition for ‘numericInput’
+mod_screen_ui: no visible global function definition for ‘selectInput’
+mod_screen_ui: no visible global function definition for ‘span’
+mod_screen_ui: no visible binding for global variable ‘tags’
+mod_screen_ui: no visible global function definition for ‘actionButton’
+mod_screen_ui: no visible global function definition for ‘icon’
+mod_screen_ui: no visible global function definition for ‘p’
+next_step_button: no visible binding for global variable ‘tags’
+next_step_button: no visible global function definition for ‘HTML’
+step_header: no visible global function definition for ‘div’
+step_header: no visible global function definition for ‘h2’
+step_header: no visible global function definition for ‘p’
+theme_dsi: no visible global function definition for ‘theme_minimal’
+theme_dsi: no visible global function definition for ‘theme’
+theme_dsi: no visible global function definition for ‘element_text’
+theme_dsi: no visible global function definition for ‘element_blank’
+theme_dsi: no visible global function definition for ‘element_line’
+theme_dsi: no visible global function definition for ‘element_rect’
+ts_window_chart: no visible global function definition for ‘e_charts’
+Undefined global functions or variables:
+  %>% actionButton aes affected band bin br bs_theme checkboxGroupInput
+  component conditionalPanel count cpue cpue_s debounce delta div
+  downloadButton downloadHandler dsi_v2 dsi_v2_corrected dsi_v2_legacy
+  e_animation e_bar e_charts e_flip_coords e_grid e_legend e_line
+  e_mark_line e_scatter e_tooltip e_x_axis e_y_axis echarts4rOutput
+  effort effort_n_unique effort_s element_blank element_line
+  element_rect element_text fileInput fitted fix fleet font_google
+  geom_hline geom_line geom_point geom_smooth ggplot group_key h2 h3 h4
+  h5 head HTML icon isolate label labs last_usable_year lm log_cpue
+  max_year mean_abs_delta moduleServer n_off n_rows NS numericInput
+  observe observed observeEvent outputOptions p plot.new plotOutput
+  radioButtons ratio reactive reactiveVal renderEcharts4r renderPlot
+  renderUI req rstandard selected_dsi_v2 selected_end selected_start
+  selectInput setProgress showNotification sliderInput span start_year
+  std_resid strong tagList tags text textAreaInput textInput theme
+  theme_minimal trailing_years uiOutput updateNumericInput
+  updateRadioButtons updateSliderInput usable_cpue withProgress x year
+  yours
+Consider adding
+  importFrom("graphics", "plot.new", "text")
+  importFrom("stats", "fitted", "lm", "rstandard")
+  importFrom("utils", "fix", "head")
+to your NAMESPACE file.
+* checking Rd files ... WARNING
+prepare_Rd: check_cpue_scale.Rd:16: unexpected section header '\value'
+prepare_Rd: check_cpue_scale.Rd:20: unexpected section header '\description'
+prepare_Rd: check_cpue_scale.Rd:26: unexpected END_OF_INPUT '
+'
+checkRd: (5) check_cpue_scale.Rd:0-27: Must have a \description
+prepare_Rd: grapes-or-or-grapes.Rd: \name should not contain !, | or @
+* checking Rd metadata ... OK
+* checking Rd cross-references ... WARNING
+Missing link or links in documentation object 'clamp01.Rd':
+  ‘0, 1’
+
+Missing link or links in documentation object 'guess_column.Rd':
+  ‘LOCAL FIX’
+
+See section 'Cross-references' in the 'Writing R Extensions' manual.
+* checking for missing documentation entries ... OK
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... WARNING
+Undocumented arguments in documentation object 'format_dsi_score'
+  ‘score’ ‘digits’
+
+Undocumented arguments in documentation object 'format_p'
+  ‘p’
+
+Undocumented arguments in documentation object 'mod_audit_server'
+  ‘id’ ‘app_state’
+
+Undocumented arguments in documentation object 'mod_audit_ui'
+  ‘id’
+
+Undocumented arguments in documentation object 'mod_compare_server'
+  ‘id’ ‘app_state’
+
+Undocumented arguments in documentation object 'mod_compare_ui'
+  ‘id’
+
+Undocumented arguments in documentation object 'mod_context_rail_server'
+  ‘id’ ‘app_state’
+
+Undocumented arguments in documentation object 'mod_context_rail_ui'
+  ‘id’
+
+Undocumented arguments in documentation object 'mod_data_input_server'
+  ‘id’ ‘app_state’
+
+Undocumented arguments in documentation object 'mod_data_input_ui'
+  ‘id’
+
+Undocumented arguments in documentation object 'mod_decide_server'
+  ‘id’ ‘app_state’
+
+Undocumented arguments in documentation object 'mod_decide_ui'
+  ‘id’
+
+Undocumented arguments in documentation object 'mod_explore_server'
+  ‘id’ ‘app_state’
+
+Undocumented arguments in documentation object 'mod_explore_ui'
+  ‘id’
+
+Undocumented arguments in documentation object 'mod_report_server'
+  ‘id’ ‘app_state’
+
+Undocumented arguments in documentation object 'mod_report_ui'
+  ‘id’
+
+Undocumented arguments in documentation object 'mod_screen_server'
+  ‘id’ ‘app_state’
+
+Undocumented arguments in documentation object 'mod_screen_ui'
+  ‘id’
+
+Undocumented arguments in documentation object 'theme_dsi'
+  ‘base_size’
+
+Functions with \usage entries need to have the appropriate \alias
+entries, and all their arguments documented.
+The \usage entries must correspond to syntactically valid R code.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking examples ... OK
+* checking for unstated dependencies in ‘tests’ ... OK
+* checking tests ... OK
+  Running ‘testthat.R’
+* DONE
+Status: 6 WARNINGs, 2 NOTEs
