@@ -204,19 +204,25 @@ audit_data <- function(df, group_cols = c("species", "fleet")) {
     )
   }
   
-  cpue_derived_check <- df %>%
-    dplyr::mutate(
-      cpue_calc = catch / effort,
-      cpue_match = abs(cpue - cpue_calc) < 1e-6
-    ) %>%
-    dplyr::filter(!is.na(cpue) & !is.na(cpue_calc) & !cpue_match)
-  
-  if (nrow(cpue_derived_check) > 0) {
-    findings$cpue_mismatch <- list(
-      n = nrow(cpue_derived_check),
-      message = sprintf("CPUE != catch/effort in %d rows", nrow(cpue_derived_check)),
+  cpue_check <- check_cpue_scale(df, group_cols)
+  if (!is.null(cpue_check$finding)) {
+    findings[[cpue_check$finding_name]] <- cpue_check$finding
+  }
+
+  effort_struct <- effort_structure(df, group_cols)
+  if (effort_struct$n_cells_differ > 0) {
+    findings$effort_differs_within_fleet_year <- list(
+      n = effort_struct$n_cells_differ,
+      message = sprintf(paste0(
+        "Effort differs between %s in %d of %d cells. ",
+        "Keep the default ('One effort per ... and year') or 'Each row keeps its own effort' under Effort Semantics. ",
+        "Use the shared option only if effort is really a %s-level quantity: the original scripts copied one ",
+        "group's effort to all groups, which is the bug the corrected method fixes."),
+        if (effort_struct$has_fleet) "species of the same fleet and year" else "groups in the same year",
+        effort_struct$n_cells_differ, effort_struct$n_cells,
+        if (effort_struct$has_fleet) "fleet" else "year"),
       severity = "info",
-      data = cpue_derived_check
+      data = effort_struct$cells
     )
   }
   
@@ -245,4 +251,115 @@ audit_data <- function(df, group_cols = c("species", "fleet")) {
   }
   
   findings
+}
+
+#' Check whether a mapped CPUE column is catch / effort (up to a unit scale)
+#'
+#' DSI fits log(CPUE) on effort and uses the CPUE max/min ratio, so a constant
+#' multiplier on CPUE within a group (e.g. CPUE in kg per day = 1000 x tonnes
+#' per day) changes nothing. Only a ratio CPUE / (catch / effort) that varies
+#' within a group means the CPUE column is not the catch/effort in the data.
+#'
+#' @param df Standardised data (year, species, fleet, catch, effort, cpue)
+#' @param group_cols Grouping columns
+#' @param tol Relative tolerance for "constant" (default 1\%, allows rounding)
+#' @return List with `finding_name`, `finding` (NULL if CPUE = catch/effort),
+#'   overall `scale`, and per-group table `groups`
+#' @export
+check_cpue_scale <- function(df, group_cols = c("species", "fleet"), tol = 0.01) {
+  ok <- is.finite(df$cpue) & is.finite(df$catch) & is.finite(df$effort) &
+    df$cpue > 0 & df$catch > 0 & df$effort > 0
+  if (!any(ok)) return(list(finding = NULL, finding_name = NULL, scale = NA_real_, groups = NULL))
+  d <- df[ok, , drop = FALSE]
+  d$ratio <- d$cpue / (d$catch / d$effort)
+  d$group_key <- make_group_key(d, group_cols)
+  nice_scale <- function(x) {
+    p10 <- 10^round(log10(x))
+    if (abs(x / p10 - 1) <= tol) p10 else signif(x, 3)
+  }
+  grp <- d %>%
+    dplyr::group_by(group_key) %>%
+    dplyr::summarise(
+      n_rows = dplyr::n(),
+      ratio_median = stats::median(ratio),
+      n_off = sum(abs(ratio / stats::median(ratio) - 1) > tol),
+      ratio_min = min(ratio), ratio_max = max(ratio),
+      .groups = "drop") %>%
+    dplyr::mutate(consistent = n_off <= pmax(0, floor(0.02 * n_rows)))
+  overall <- stats::median(d$ratio)
+  all_one <- all(abs(d$ratio - 1) <= tol)
+  if (all_one) {
+    return(list(finding = NULL, finding_name = NULL, scale = 1, groups = grp))
+  }
+  if (all(grp$consistent)) {
+    scales <- unique(vapply(grp$ratio_median, nice_scale, numeric(1)))
+    msg <- if (length(scales) == 1) {
+      sprintf(paste0("CPUE = catch / effort x %s in all %d rows: a constant unit scale. ",
+                     "No action needed. DSI is scale-invariant (log-CPUE slope and CPUE ratios)."),
+              format(scales, big.mark = ",", scientific = FALSE), nrow(d))
+    } else {
+      sprintf(paste0("CPUE = catch / effort times a constant within each group (scales: %s). ",
+                     "No action needed. DSI is computed per group and is scale-invariant."),
+              paste(format(utils::head(sort(scales), 6), big.mark = ",", scientific = FALSE), collapse = ", "))
+    }
+    return(list(
+      finding_name = "cpue_unit_scale",
+      finding = list(n = nrow(d), message = msg, severity = "info",
+                     data = as.data.frame(grp[, c("group_key", "n_rows", "ratio_median")])),
+      scale = if (length(scales) == 1) scales else NA_real_, groups = grp))
+  }
+  bad <- grp[!grp$consistent, ]
+  list(
+    finding_name = "cpue_not_catch_over_effort",
+    finding = list(
+      n = sum(bad$n_rows),
+      message = sprintf(paste0(
+        "CPUE is not catch / effort (even up to a constant) in %d of %d groups (%d rows): ",
+        "CPUE / (catch / effort) varies within the group (e.g. %s: %s to %s). ",
+        "The CPUE column may be standardised, or effort may not be the effort behind this CPUE. ",
+        "Check the mapping. DSI uses the CPUE column, but the catch-effort correlation uses catch and effort."),
+        nrow(bad), nrow(grp), sum(bad$n_rows), bad$group_key[1],
+        signif(bad$ratio_min[1], 3), signif(bad$ratio_max[1], 3)),
+      severity = "warning",
+      data = as.data.frame(bad[, c("group_key", "n_rows", "n_off", "ratio_min", "ratio_median", "ratio_max")])),
+    scale = NA_real_, groups = grp)
+}
+
+#' Describe how effort is structured across groups
+#'
+#' @param df Standardised data
+#' @param group_cols Grouping columns
+#' @return List with counts of year x fleet cells where groups report
+#'   different effort, and the cells themselves
+#' @export
+effort_structure <- function(df, group_cols = c("species", "fleet")) {
+  has_fleet <- "fleet" %in% group_cols
+  cells <- df %>%
+    dplyr::filter(is.finite(effort)) %>%
+    dplyr::group_by(year, fleet) %>%
+    dplyr::summarise(n_groups = dplyr::n(), n_distinct_effort = dplyr::n_distinct(effort),
+                     effort_min = min(effort), effort_max = max(effort), .groups = "drop")
+  multi <- cells[cells$n_groups > 1, ]
+  differ <- multi[multi$n_distinct_effort > 1, ]
+  list(has_fleet = has_fleet, n_cells = nrow(multi), n_cells_differ = nrow(differ),
+       cells = as.data.frame(utils::head(differ, 500)))
+}
+
+#' Preview the effect of each Effort Semantics option
+#'
+#' @param df Standardised data
+#' @param group_cols Grouping columns
+#' @return Data frame: option, rows whose effort changes, rows whose missing
+#'   effort is filled, cells with conflicting values
+#' @export
+effort_semantics_impact <- function(df, group_cols = c("species", "fleet")) {
+  opts <- c("per_row", "per_group_year", "per_fleet_year")
+  do.call(rbind, lapply(opts, function(o) {
+    h <- harmonize_effort_corrected(df, o, group_cols)
+    before <- df$effort; after <- h$effort
+    changed <- is.finite(before) & is.finite(after) & abs(after - before) > 1e-9 * pmax(1, abs(before))
+    filled <- !is.finite(before) & is.finite(after)
+    data.frame(option = o, rows_changed = sum(changed), rows_filled = sum(filled),
+               conflicts = sum(h$effort_conflicts %in% TRUE), stringsAsFactors = FALSE)
+  }))
 }
