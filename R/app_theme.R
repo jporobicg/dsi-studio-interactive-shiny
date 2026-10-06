@@ -290,6 +290,8 @@ dsi_custom_css <- function() {
     .dsi-table th { background: #F5F7F9; font-weight: 600; text-align: left; padding: 7px 9px; border-bottom: 1px solid #E3E3E3; }
     .dsi-table td { padding: 6px 9px; border-bottom: 1px solid #F0F0F0; }
     .echarts4r, .html-widget { max-width: 100%; }
+    .dataTables_wrapper { max-width: 100%; }
+    .dataTables_wrapper .pagination { flex-wrap: wrap; }
 
     /* ---------- responsive ---------- */
     @media (max-width: 1199.98px) {
@@ -328,6 +330,10 @@ dsi_custom_css <- function() {
       .metric-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
       .metric-value { font-size: 20px; }
       .compare-scores .big { font-size: 24px; }
+      .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { float: none; text-align: left; font-size: 12px; }
+      .dataTables_wrapper .dataTables_paginate .page-link { padding: 4px 8px; }
+      .dataTables_wrapper .dataTables_filter { float: none; text-align: left; }
+      #shiny-notification-panel { max-width: calc(100vw - 16px); right: 8px; left: auto; }
     }
   "))
 }
