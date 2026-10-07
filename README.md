@@ -62,7 +62,7 @@ Then open <http://localhost:43210>.
 
 The app provides a six-step workflow:
 
-1. **Data** — Upload CSV/XLSX or load example data; layout, columns and effort level are detected and can be changed
+1. **Data** — Upload CSV/XLSX (one file, two catch+effort files, or Excel sheets) or load example data; layout, columns and effort level are detected and can be changed
 2. **Audit** — Data validation and quality checks
 3. **Screen** — Configure method profile (Corrected or Legacy), window parameters
 4. **Explore** — Interactive score grid and group detail views with diagnostics
@@ -104,12 +104,18 @@ Supported input layouts:
   When the table does not say what the group columns hold, you pick it.
 - **Wide, years as columns**: headers `1990, 1991, ...` with a group column
   and optionally a column naming the quantity (catch, effort).
-- **Excel workbooks**: pick one sheet, or a catch sheet and an effort sheet
-  (each long or wide). They are joined by year and the shared group columns,
-  so effort per fleet is spread over the species of that fleet.
+- **Two-row fleet × species catch header**: first header row repeats fleet
+  names across species columns; second row holds species codes. Reshaped to
+  long `(year, fleet, species, catch)`.
+- **Excel workbooks / two files**: pick one sheet, or a catch sheet and an
+  effort sheet (each long or wide, including the two-row catch header). You
+  can also upload two CSV files (catch + effort). They are joined by year and
+  the shared group columns, so effort per fleet is spread over the species of
+  that fleet. CPUE is computed as catch/effort when missing.
 
 Wide tables are reshaped to long and the app says so (e.g. "Reshaped from
-wide: 3 groups × 52 years").
+wide: 3 groups × 52 years" or "Reshaped from fleet × species header: 11
+series × 33 years").
 
 Effort level is detected too: if effort is identical for all species within
 each fleet-year (or for all groups within each year), it is treated as a

@@ -277,3 +277,55 @@ test_that("reshaping drops rows with no values at all", {
   expect_equal(nrow(r), 18)
   expect_equal(min(r$year[r$group == "A"]), 2003)
 })
+
+## ---- fleet x species two-row catch header + fleet effort ----
+
+test_that("wide_fleet_species: two-row catch header reshapes to year/fleet/species/catch", {
+  catch <- read_table_file(fixture("fleet_species_catch.csv"))
+  l <- detect_data_layout(catch)
+  expect_equal(l$shape, "wide_fleet_species")
+  expect_equal(l$value_role, "catch")
+  expect_true(l$value_role_certain)
+  r <- reshape_to_long(catch, l)
+  expect_equal(nrow(r), 363)
+  expect_equal(names(r), c("year", "fleet", "species", "catch"))
+  expect_equal(length(unique(paste(r$fleet, r$species))), 11)
+  expect_equal(range(r$year), c(1986, 2018))
+  expect_equal(r$catch[r$year == 1986 & r$fleet == "SETF_Danish_Siene" & r$species == "FLT"], 597.637)
+  expect_match(attr(r, "reshape_note"), "11 series")
+})
+
+test_that("wide effort-by-fleet reshapes and combines with fleet x species catch", {
+  catch <- read_table_file(fixture("fleet_species_catch.csv"))
+  effort <- read_table_file(fixture("fleet_effort.csv"))
+  expect_equal(detect_data_layout(effort)$shape, "wide_years_rows")
+  out <- combine_sheets(list(catch = catch, effort = effort),
+                        c("fleet_species_catch.csv", "fleet_effort.csv"))
+  expect_equal(nrow(out), 363)
+  expect_setequal(names(out), c("year", "fleet", "species", "catch", "effort"))
+  expect_equal(sum(is.na(out$effort)), 0)
+  expect_match(attr(out, "reshape_note"), "year and fleet")
+  m <- match_columns(out)
+  expect_true(m$confident)
+  s <- standardize_columns(out, m$map)
+  expect_equal(nrow(s), 363)
+  expect_equal(sum(is.finite(s$cpue)), 363)
+  d <- detect_effort_level(s, c("species", "fleet"))
+  expect_equal(d$semantics, "per_fleet_year")
+  expect_equal(d$level, "fleet_year")
+})
+
+test_that("Excel workbook with fleet x species catch sheet + effort sheet combines", {
+  p <- fixture("fleet_species_catch_effort.xlsx")
+  out <- combine_sheets(
+    list(catch = as.data.frame(readxl::read_excel(p, "Catch", .name_repair = "minimal"), check.names = FALSE),
+         effort = as.data.frame(readxl::read_excel(p, "Effort", .name_repair = "minimal"), check.names = FALSE)),
+    c("Catch", "Effort"))
+  expect_equal(nrow(out), 363)
+  expect_equal(sum(is.na(out$effort)), 0)
+  expect_equal(length(unique(paste(out$fleet, out$species))), 11)
+  m <- match_columns(out)
+  expect_true(m$confident)
+  s <- standardize_columns(out, m$map)
+  expect_equal(detect_effort_level(s, c("species", "fleet"))$semantics, "per_fleet_year")
+})

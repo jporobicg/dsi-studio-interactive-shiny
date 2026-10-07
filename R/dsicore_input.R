@@ -218,16 +218,51 @@ match_columns <- function(df) {
 
 .first_non_na <- function(v) { v <- v[!is.na(v)]; if (length(v)) v[1] else NA }
 
+
+## Two-row catch header: colnames = fleets (often repeating), first data row = species codes
+.is_text_label <- function(x) {
+  x <- trimws(as.character(x))
+  if (!nzchar(x) || is.na(x)) return(FALSE)
+  !is.finite(suppressWarnings(as.numeric(gsub(",", "", x))))
+}
+
+#' Does a table use a two-row fleet \u00d7 species catch header?
+#'
+#' After a normal read the fleet names are the column names (duplicates kept)
+#' and the first data row holds species codes under each fleet.
+#' @param df Data frame as read from file (`check.names = FALSE`)
+#' @return TRUE when the table matches that layout
+#' @keywords internal
+.is_fleet_species_catch <- function(df) {
+  if (nrow(df) < 2L || ncol(df) < 3L) return(FALSE)
+  n <- ncol(df)
+  fleets <- names(df)[-1L]
+  if (any(!nzchar(fleets)) || any(.is_year_name(fleets))) return(FALSE)
+  ## first data row = species labels (positional: colnames may duplicate)
+  sp <- vapply(seq.int(2L, n), function(j) {
+    x <- df[[j]][1L]
+    if (length(x) == 0L || is.na(x)) "" else trimws(as.character(x))
+  }, character(1))
+  if (sum(nzchar(sp)) < 2L) return(FALSE)
+  if (!all(vapply(sp[nzchar(sp)], .is_text_label, logical(1)))) return(FALSE)
+  y0 <- df[[1L]][1L]
+  y0_blank <- length(y0) == 0L || is.na(y0) || !nzchar(trimws(as.character(y0)))
+  if (!y0_blank && .looks_like_years(y0)) return(FALSE)
+  years <- df[[1L]][-1L]
+  if (!.looks_like_years(years)) return(FALSE)
+  TRUE
+}
+
 #' Detect the layout of an input table
 #'
-#' Recognises long tables (one row per year and group) and two wide forms:
-#' years as rows with one column per group, and years as column headers
-#' (1990, 1991, ...) with a group column and optionally a variable column
-#' naming catch, effort or CPUE.
+#' Recognises long tables (one row per year and group), a two-row fleet
+#' \u00d7 species catch header, and two wide forms: years as rows with one
+#' column per group, and years as column headers (1990, 1991, ...) with a
+#' group column and optionally a variable column naming catch, effort or CPUE.
 #'
 #' @param df Data frame as read from file
-#' @return List with `shape` ("long", "wide_years_rows" or
-#'   "wide_years_cols") and details used by [reshape_to_long()]:
+#' @return List with `shape` ("long", "wide_fleet_species", "wide_years_rows"
+#'   or "wide_years_cols") and details used by [reshape_to_long()]:
 #'   `year_col`, `group_cols`, `value_cols`, `shared_cols`, `var_col`,
 #'   `value_role` (guessed quantity of the values, or NA when the variable
 #'   column or column names give it) and `value_role_certain`.
@@ -239,6 +274,17 @@ detect_data_layout <- function(df) {
               shared_cols = character(0), var_col = NULL, compound = NULL,
               value_role = NA_character_, value_role_certain = TRUE)
   if (!length(cols) || !nrow(df)) return(out)
+
+  ## two-row fleet \u00d7 species catch header (colnames = fleets, row 1 = species)
+  if (.is_fleet_species_catch(df)) {
+    out$shape <- "wide_fleet_species"
+    out$year_col <- cols[1]
+    out$value_cols <- cols[-1]
+    out$group_cols <- c("fleet", "species")
+    out$value_role <- "catch"
+    out$value_role_certain <- TRUE
+    return(out)
+  }
 
   ## (c) years as column headers
   yc <- cols[.is_year_name(cols)]
@@ -317,6 +363,27 @@ reshape_to_long <- function(df, layout = detect_data_layout(df), value_role = NU
   if (is.na(value_role %||% NA)) value_role <- "catch"
   num <- function(v) suppressWarnings(as.numeric(if (is.numeric(v)) v else gsub(",", "", as.character(v))))
 
+  if (layout$shape == "wide_fleet_species") {
+    fleets <- names(df)[-1L]
+    species <- vapply(seq_along(fleets) + 1L, function(j) {
+      x <- df[[j]][1L]
+      if (length(x) == 0L || is.na(x)) NA_character_ else trimws(as.character(x))
+    }, character(1))
+    years <- as.integer(num(df[[1L]][-1L]))
+    parts <- lapply(seq_along(fleets), function(i) {
+      data.frame(year = years, fleet = fleets[i], species = species[i],
+                 catch = num(df[[i + 1L]][-1L]), stringsAsFactors = FALSE)
+    })
+    long <- as.data.frame(dplyr::bind_rows(parts), stringsAsFactors = FALSE)
+    long <- long[is.finite(long$year), , drop = FALSE]
+    rownames(long) <- NULL
+    n_series <- nrow(unique(long[, c("fleet", "species"), drop = FALSE]))
+    note <- sprintf("Reshaped from fleet \u00d7 species header: %d series \u00d7 %d years",
+                    n_series, length(unique(years[is.finite(years)])))
+    attr(long, "reshape_note") <- note
+    return(long)
+  }
+
   if (layout$shape == "wide_years_cols") {
     id <- c(layout$group_cols, layout$var_col)
     long <- tidyr::pivot_longer(df[, c(id, layout$value_cols), drop = FALSE], cols = dplyr::all_of(layout$value_cols),
@@ -387,13 +454,26 @@ sheet_roles <- function(sheets) {
 .sheet_to_long <- function(df, role) {
   lay <- detect_data_layout(df)
   if (lay$shape != "long") {
+    if (identical(lay$shape, "wide_fleet_species")) {
+      long <- reshape_to_long(df, lay)
+      ## catch layout always yields catch; ignore role for the value column name
+      keep <- intersect(names(long), c("year", "fleet", "species", "catch"))
+      if (role != "catch" && "catch" %in% names(long)) {
+        names(long)[names(long) == "catch"] <- role
+        keep <- intersect(names(long), c("year", "fleet", "species", role))
+      }
+      return(list(data = long[, keep, drop = FALSE], note = attr(long, "reshape_note")))
+    }
     if (!is.null(lay$var_col) || !is.null(lay$compound)) {
       long <- reshape_to_long(df, lay)
       keep <- intersect(names(long), c("year", lay$group_cols, "group", role))
       return(list(data = long[, keep, drop = FALSE], note = attr(long, "reshape_note")))
     }
     long <- reshape_to_long(df, lay, value_role = role)
-    keep <- intersect(names(long), c("year", lay$group_cols, "group", role))
+    ## wide effort-by-fleet: prefer 'fleet' as the group column name
+    if (role == "effort" && "group" %in% names(long) && !"fleet" %in% names(long))
+      names(long)[names(long) == "group"] <- "fleet"
+    keep <- intersect(names(long), c("year", lay$group_cols, "group", "fleet", role))
     return(list(data = long[, keep, drop = FALSE], note = attr(long, "reshape_note")))
   }
   m <- match_columns(df)
@@ -432,6 +512,20 @@ combine_sheets <- function(sheets, labels = names(sheets)) {
   ref <- gcols[[1]]
   if (length(ref) == 1) for (i in seq_along(tabs)[-1]) {
     if (length(gcols[[i]]) == 1 && gcols[[i]] != ref) names(tabs[[i]])[names(tabs[[i]]) == gcols[[i]]] <- ref
+  }
+  ## fleet \u00d7 species catch + fleet-level effort: rename group -> fleet when values match
+  for (i in seq_along(tabs)) {
+    gi <- setdiff(names(tabs[[i]]), c("year", names(sheets)))
+    for (j in seq_along(tabs)) {
+      if (i == j) next
+      gj <- setdiff(names(tabs[[j]]), c("year", names(sheets)))
+      if ("fleet" %in% gi && "group" %in% gj && !"fleet" %in% gj) {
+        vals_i <- unique(stats::na.omit(as.character(tabs[[i]]$fleet)))
+        vals_j <- unique(stats::na.omit(as.character(tabs[[j]]$group)))
+        if (length(vals_j) && all(vals_j %in% vals_i))
+          names(tabs[[j]])[names(tabs[[j]]) == "group"] <- "fleet"
+      }
+    }
   }
   out <- tabs[[1]]
   keys <- "year"

@@ -10,15 +10,15 @@ detect_data_layout(df)
 \item{df}{Data frame as read from file}
 }
 \value{
-List with \code{shape} ("long", "wide_years_rows" or
+List with \code{shape} ("long", "wide_fleet_species", "wide_years_rows" or
 "wide_years_cols") and details used by \code{\link[=reshape_to_long]{reshape_to_long()}}:
 \code{year_col}, \code{group_cols}, \code{value_cols}, \code{shared_cols}, \code{var_col},
 \code{value_role} (guessed quantity of the values, or NA when the variable
 column or column names give it) and \code{value_role_certain}.
 }
 \description{
-Recognises long tables (one row per year and group) and two wide forms:
-years as rows with one column per group, and years as column headers
-(1990, 1991, ...) with a group column and optionally a variable column
-naming catch, effort or CPUE.
+Recognises long tables (one row per year and group), a two-row fleet
+× species catch header, and two wide forms: years as rows with one
+column per group, and years as column headers (1990, 1991, ...) with a
+group column and optionally a variable column naming catch, effort or CPUE.
 }

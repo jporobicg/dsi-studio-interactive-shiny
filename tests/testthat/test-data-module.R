@@ -55,3 +55,38 @@ test_that("an uncertain mapping is not applied until the user applies it", {
     expect_true(src$info$needs_input)
   })
 })
+
+test_that("two CSV uploads (fleet x species catch + fleet effort) combine and auto-map", {
+  st <- new_state()
+  f1 <- test_path("fixtures", "fleet_species_catch.csv")
+  f2 <- test_path("fixtures", "fleet_effort.csv")
+  shiny::testServer(mod_data_input_server, args = list(app_state = st), {
+    session$setInputs(file_upload = data.frame(
+      name = c("fleet_species_catch.csv", "fleet_effort.csv"),
+      size = c(file.size(f1), file.size(f2)),
+      type = c("text/csv", "text/csv"),
+      datapath = c(f1, f2),
+      stringsAsFactors = FALSE))
+    expect_equal(nrow(st$data_raw), 363)
+    expect_equal(st$col_map, list(year = "year", species = "species", fleet = "fleet",
+                                  catch = "catch", effort = "effort"))
+    expect_equal(st$group_cols, c("species", "fleet"))
+    expect_equal(st$effort_semantics, "per_fleet_year")
+    expect_true("data" %in% st$steps_completed)
+    expect_equal(sum(is.na(st$data_std$effort)), 0)
+  })
+})
+
+test_that("Excel fleet x species catch + effort workbook combines on upload", {
+  st <- new_state()
+  f <- test_path("fixtures", "fleet_species_catch_effort.xlsx")
+  shiny::testServer(mod_data_input_server, args = list(app_state = st), {
+    session$setInputs(file_upload = data.frame(
+      name = "fleet_species_catch_effort.xlsx", size = file.size(f),
+      type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      datapath = f, stringsAsFactors = FALSE))
+    expect_equal(nrow(st$data_raw), 363)
+    expect_equal(st$effort_semantics, "per_fleet_year")
+    expect_true(isTRUE(src$auto))
+  })
+})

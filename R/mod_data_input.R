@@ -45,7 +45,7 @@ mod_data_input_ui <- function(id) {
   ns <- NS(id)
   tagList(
     step_header("Load and map your data",
-      "Upload a catch and effort table, long (one row per year and group) or wide (one column per group or per year). DSI Studio detects the layout, the columns and the effort level. Check the summary and change anything that is wrong.",
+      "Upload a catch and effort table (or two files / Excel sheets), long or wide. DSI Studio detects the layout -- including a two-row fleet \u00d7 species catch header -- the columns and the effort level. Check the summary and change anything that is wrong.",
       number = 1),
     uiOutput(ns("load_ui")),
     uiOutput(ns("sheet_ui")),
@@ -134,7 +134,7 @@ mod_data_input_server <- function(id, app_state) {
       set_data(info, name)
     }
 
-    read_sheet <- function(sheet) as.data.frame(readxl::read_excel(src$path, sheet = sheet), check.names = FALSE)
+    read_sheet <- function(sheet) as.data.frame(readxl::read_excel(src$path, sheet = sheet, .name_repair = "minimal"), check.names = FALSE)
 
     load_workbook <- function(sel) {
       src$sheet_sel <- sel
@@ -165,15 +165,75 @@ mod_data_input_server <- function(id, app_state) {
       src$sheets <- NULL
       load_table(load_demo_data("species_fleet"), "Species \u00d7 fleet (example)")
     })
+    ## Classify two tables as catch + effort (layout and file names)
+    classify_pair <- function(dfs, names) {
+      roles <- sheet_roles(tools::file_path_sans_ext(basename(names)))
+      lay <- lapply(dfs, detect_data_layout)
+      catch_i <- which(vapply(lay, function(l) identical(l$shape, "wide_fleet_species"), logical(1)))
+      if (!length(catch_i)) catch_i <- which(roles %in% "catch")
+      if (!length(catch_i)) catch_i <- which(vapply(lay, function(l) isTRUE(l$value_role_certain) &&
+                                                                   identical(l$value_role, "catch"), logical(1)))
+      effort_i <- which(roles %in% "effort")
+      ci <- if (length(catch_i)) catch_i[1] else 0L
+      if (!length(effort_i)) {
+        effort_i <- which(vapply(seq_along(lay), function(i)
+          identical(lay[[i]]$shape, "wide_years_rows") && i != ci, logical(1)))
+      }
+      if (!length(effort_i)) effort_i <- setdiff(seq_along(dfs), ci)
+      if (!length(catch_i) || !length(effort_i) || catch_i[1] == effort_i[1])
+        stop("Could not tell which file is catch and which is effort. Name them catch/effort, or use an Excel workbook with two sheets.")
+      list(catch = dfs[[catch_i[1]]], effort = dfs[[effort_i[1]]],
+           catch_name = names[catch_i[1]], effort_name = names[effort_i[1]])
+    }
+
+    load_pair <- function(catch_df, effort_df, catch_name, effort_name, label = NULL) {
+      out <- tryCatch(combine_sheets(list(catch = catch_df, effort = effort_df),
+                                     labels = c(catch_name, effort_name)),
+                      error = function(e) {
+                        showNotification(paste("Could not combine catch and effort:", conditionMessage(e)), type = "error")
+                        NULL })
+      if (is.null(out)) return()
+      note <- attr(out, "reshape_note"); attr(out, "reshape_note") <- NULL
+      src$raw <- NULL; src$sheets <- NULL
+      nm <- label %||% sprintf("%s + %s", catch_name, effort_name)
+      set_data(list(data = out, layout = list(shape = "sheets"), note = note, ask_role = FALSE, needs_input = FALSE), nm)
+    }
+
     observeEvent(input$file_upload, {
       req(input$file_upload)
       f <- input$file_upload
-      ext <- tolower(tools::file_ext(f$name))
+      n <- nrow(f)
+      if (n >= 2) {
+        ext <- tolower(tools::file_ext(f$name))
+        if (!all(ext %in% c("csv", "txt", "tsv", "xlsx", "xls"))) {
+          showNotification("Two-file upload supports CSV/TXT or Excel only.", type = "error"); return()
+        }
+        dfs <- vector("list", n); ok <- TRUE
+        for (i in seq_len(n)) {
+          e <- ext[i]
+          dfs[[i]] <- tryCatch({
+            if (e %in% c("xlsx", "xls")) {
+              sh <- readxl::excel_sheets(f$datapath[i])[1]
+              as.data.frame(readxl::read_excel(f$datapath[i], sheet = sh, .name_repair = "minimal"),
+                            check.names = FALSE)
+            } else read_table_file(f$datapath[i])
+          }, error = function(err) {
+            showNotification(paste("Error loading", f$name[i], ":", conditionMessage(err)), type = "error")
+            ok <<- FALSE; NULL })
+        }
+        if (!ok || any(vapply(dfs, is.null, logical(1)))) return()
+        pair <- tryCatch(classify_pair(dfs[1:2], f$name[1:2]), error = function(e) {
+          showNotification(conditionMessage(e), type = "error"); NULL })
+        if (is.null(pair)) return()
+        load_pair(pair$catch, pair$effort, pair$catch_name, pair$effort_name)
+        return()
+      }
+      ext <- tolower(tools::file_ext(f$name[1]))
       if (ext %in% c("xlsx", "xls")) {
-        sheets <- tryCatch(readxl::excel_sheets(f$datapath), error = function(e) {
+        sheets <- tryCatch(readxl::excel_sheets(f$datapath[1]), error = function(e) {
           showNotification(paste("Error loading file:", conditionMessage(e)), type = "error"); NULL })
         if (is.null(sheets)) return()
-        src$path <- f$datapath; src$file <- f$name; src$sheets <- sheets
+        src$path <- f$datapath[1]; src$file <- f$name[1]; src$sheets <- sheets
         roles <- sheet_roles(sheets)
         cs <- names(roles)[roles %in% "catch"][1]; es <- names(roles)[roles %in% "effort"][1]
         cp <- names(roles)[roles %in% "cpue"][1]
@@ -183,17 +243,18 @@ mod_data_input_server <- function(id, app_state) {
         load_workbook(sel)
       } else if (ext %in% c("csv", "txt", "tsv")) {
         src$sheets <- NULL
-        df <- tryCatch(read_table_file(f$datapath), error = function(e) {
+        df <- tryCatch(read_table_file(f$datapath[1]), error = function(e) {
           showNotification(paste("Error loading file:", conditionMessage(e)), type = "error"); NULL })
-        if (!is.null(df)) load_table(df, f$name)
+        if (!is.null(df)) load_table(df, f$name[1])
       } else showNotification(paste("Unsupported file type:", ext), type = "error")
     })
 
     ## ---- load card ----
     output$load_ui <- renderUI({
       has <- !is.null(app_state$data_raw)
-      upload <- fileInput(ns("file_upload"), NULL, accept = c(".csv", ".txt", ".tsv", ".xlsx", ".xls"),
-                          buttonLabel = "Choose file\u2026", placeholder = "CSV or Excel", width = "100%")
+      upload <- fileInput(ns("file_upload"), NULL, multiple = TRUE,
+                          accept = c(".csv", ".txt", ".tsv", ".xlsx", ".xls"),
+                          buttonLabel = "Choose file\u2026", placeholder = "CSV / Excel (one or two files)", width = "100%")
       tiles <- div(class = "demo-tiles",
         tags$button(type = "button", id = ns("load_demo_main"), class = "demo-tile action-button",
           span(class = "demo-tile-badge", "Example data"),
@@ -209,7 +270,7 @@ mod_data_input_server <- function(id, app_state) {
         tagList(
           div(class = "empty-state",
             h3("Start with your own catch & effort table"),
-            p("Any column names work. Long tables (one row per year \u00d7 group), wide tables (one column per group or per year) and Excel workbooks with catch and effort on separate sheets are detected."),
+            p("Any column names work. Long or wide tables, a two-row fleet \u00d7 species catch header, two CSV files (catch + effort), or an Excel workbook with catch and effort sheets are detected."),
             upload),
           div(class = "muted", style = "font-size:13px;margin:0 0 6px;", "Or try an example dataset (for demonstration only):"),
           tiles, br())
@@ -232,7 +293,7 @@ mod_data_input_server <- function(id, app_state) {
       sel <- isolate(src$sheet_sel)
       sh <- src$sheets
       dsi_card(title = "Workbook sheets",
-        p(class = "help", sprintf("%d sheets found. Use one sheet, or combine a catch sheet and an effort sheet (long or wide). They are joined by year and group.", length(sh))),
+        p(class = "help", sprintf("%d sheets found. Use one sheet, or combine a catch sheet and an effort sheet (long, wide, or a two-row fleet \u00d7 species catch header). They are joined by year and group.", length(sh))),
         radioButtons(ns("sheet_mode"), NULL, inline = TRUE, selected = sel$mode,
                      choices = c("One sheet" = "single", "Catch and effort on separate sheets" = "combine")),
         conditionalPanel(sprintf("input['%s'] == 'single'", ns("sheet_mode")),
