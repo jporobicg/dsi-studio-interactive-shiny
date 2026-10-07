@@ -4,57 +4,15 @@
 
 #' Guess column mapping from data frame
 #' 
+#' Loose name matching (units, punctuation and common suffixes ignored,
+#' English/Spanish/French synonyms). See [match_columns()] for details and
+#' confidence levels.
+#' 
 #' @param df Data frame
-#' @return List of column mappings
+#' @return List of column mappings (role -> column name)
 #' @export
 guess_column_mapping <- function(df) {
-  names_lower <- tolower(names(df))
-  
-  map <- list()
-  
-  year_candidates <- c("year", "yr", "ano", "annee")
-  date_candidates <- c("date", "fecha", "datum")
-  
-  year_match <- which(names_lower %in% year_candidates)[1]
-  date_match <- which(names_lower %in% date_candidates)[1]
-  
-  if (!is.na(year_match)) {
-    map$year <- names(df)[year_match]
-  } else if (!is.na(date_match)) {
-    map$date <- names(df)[date_match]
-  }
-  
-  species_candidates <- c("species", "sp", "especie", "group", "grupo", "stock")
-  species_match <- which(names_lower %in% species_candidates)[1]
-  if (!is.na(species_match)) {
-    map$species <- names(df)[species_match]
-  }
-  
-  fleet_candidates <- c("fleet", "gear", "flota", "arte", "metier")
-  fleet_match <- which(names_lower %in% fleet_candidates)[1]
-  if (!is.na(fleet_match)) {
-    map$fleet <- names(df)[fleet_match]
-  }
-  
-  catch_candidates <- c("catch", "captures", "yield", "captura", "desembarques", "landings")
-  catch_match <- which(names_lower %in% catch_candidates)[1]
-  if (!is.na(catch_match)) {
-    map$catch <- names(df)[catch_match]
-  }
-  
-  effort_candidates <- c("effort", "esfuerzo", "days", "trips", "hooks")
-  effort_match <- which(names_lower %in% effort_candidates)[1]
-  if (!is.na(effort_match)) {
-    map$effort <- names(df)[effort_match]
-  }
-  
-  cpue_candidates <- c("cpue", "cpua", "index", "abundance", "indice")
-  cpue_match <- which(names_lower %in% cpue_candidates)[1]
-  if (!is.na(cpue_match)) {
-    map$cpue <- names(df)[cpue_match]
-  }
-  
-  map
+  match_columns(df)$map
 }
 
 #' Compute data hash for caching

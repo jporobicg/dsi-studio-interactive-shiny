@@ -68,7 +68,7 @@ dsi_studio_server <- function(input, output, session) {
   app_state <- shiny::reactiveValues(
     current_step = "data",
     data_raw = NULL, data_std = NULL, col_map = NULL, group_cols = NULL,
-    dataset_name = NULL, effort_semantics = "per_group_year",
+    dataset_name = NULL, effort_semantics = "per_group_year", effort_detect = NULL,
     audit = NULL, dsi_results = NULL, screen_settings = NULL,
     current_group = NULL, current_window = NULL,
     overrides = list(), decisions = list(), null_tests = list(), comparison = NULL,

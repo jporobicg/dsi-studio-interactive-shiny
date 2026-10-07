@@ -29,7 +29,7 @@ context_values <- function(s) {
   }
   if (!is.null(s$col_map)) v$mapping <- paste(names(s$col_map), unlist(s$col_map), sep = "\u2192", collapse = ", ")
   v$method <- c(corrected = "Corrected", legacy = "Legacy (original)")[[s$method %||% "corrected"]]
-  v$effort <- c(per_row = "own effort per row", per_group_year = "per group-year", per_fleet_year = "shared per fleet-year")[[s$effort_semantics %||% "per_group_year"]]
+  v$effort <- c(per_row = "own effort per row", per_group_year = "per group-year", per_fleet_year = if ("fleet" %in% s$group_cols) "shared per fleet-year" else "shared per year")[[s$effort_semantics %||% "per_group_year"]]
   r <- s$dsi_results
   if (!is.null(r) && !is.null(r$dsi_all)) {
     v$groups <- length(unique(r$dsi_all$group_key))

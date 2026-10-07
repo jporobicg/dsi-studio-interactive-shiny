@@ -40,7 +40,7 @@ reset_downstream <- function(state, from = c("data", "mapping", "screen")) {
     state$audit <- NULL
   }
   if (from == "data") {
-    state$data_std <- NULL; state$col_map <- NULL; state$group_cols <- NULL
+    state$data_std <- NULL; state$col_map <- NULL; state$group_cols <- NULL; state$effort_detect <- NULL
   }
   state$current_group <- NULL; state$current_window <- NULL
   state$overrides <- list(); state$decisions <- list(); state$null_tests <- list()

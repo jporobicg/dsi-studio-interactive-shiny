@@ -10,8 +10,10 @@ guess_column_mapping(df)
 \item{df}{Data frame}
 }
 \value{
-List of column mappings
+List of column mappings (role -> column name)
 }
 \description{
-Guess column mapping from data frame
+Loose name matching (units, punctuation and common suffixes ignored,
+English/Spanish/French synonyms). See \code{\link[=match_columns]{match_columns()}} for details and
+confidence levels.
 }

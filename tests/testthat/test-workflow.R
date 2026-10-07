@@ -19,11 +19,12 @@ test_that("DSI workflow runs end to end in a headless browser", {
   app$wait_for_idle(timeout = 5000)
   expect_true(app$get_js("window.Shiny !== undefined"))
 
-  # Load the Thai main groups demo and apply the suggested mapping
+  # Loading the Thai demo detects the layout and applies the mapping itself
   app$click("data_input-load_demo_main")
   app$wait_for_idle(timeout = 5000)
-  app$click("data_input-apply_mapping")
-  app$wait_for_idle(timeout = 5000)
+  expect_match(app$get_text(".detect-card"), "applied automatically")
+  expect_match(app$get_text(".detect-card"), "Effort differs between groups in every year")
+  expect_equal(app$get_js("document.querySelectorAll('#data_input-apply_mapping').length"), 0)
 
   # Audit, then run the screening
   app$set_inputs(step_nav = "audit", allow_no_input_binding_ = TRUE, priority_ = "event")

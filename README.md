@@ -62,7 +62,7 @@ Then open <http://localhost:43210>.
 
 The app provides a six-step workflow:
 
-1. **Data** — Upload CSV/XLSX or load example data, map columns, choose effort semantics
+1. **Data** — Upload CSV/XLSX or load example data; layout, columns and effort level are detected and can be changed
 2. **Audit** — Data validation and quality checks
 3. **Screen** — Configure method profile (Corrected or Legacy), window parameters
 4. **Explore** — Interactive score grid and group detail views with diagnostics
@@ -88,6 +88,33 @@ Reproduces the original implementation exactly for verification, bugs included.
 
 **Required columns**: Year (or Date), Catch, Effort  
 **Optional columns**: Species, Fleet, CPUE
+
+Column names are matched loosely: case, units in brackets (`Catch (t)`),
+suffixes such as `_t`, `_kg` or `_code`, and common synonyms in English,
+Spanish and French (`landings`, `captura`, `gear`, `metier`, `days_fished`,
+`esfuerzo`, `catch_rate`, `año`, ...) are recognised. When year, catch and
+effort are all matched by name, the mapping is applied straight away; you can
+still change it.
+
+Supported input layouts:
+
+- **Long**: one row per year (and per species and/or fleet).
+- **Wide, years as rows**: a year column and one column per group, e.g.
+  `year, effort, Anchovy, Demersal`, or `Anchovy catch, Anchovy effort, ...`.
+  When the table does not say what the group columns hold, you pick it.
+- **Wide, years as columns**: headers `1990, 1991, ...` with a group column
+  and optionally a column naming the quantity (catch, effort).
+- **Excel workbooks**: pick one sheet, or a catch sheet and an effort sheet
+  (each long or wide). They are joined by year and the shared group columns,
+  so effort per fleet is spread over the species of that fleet.
+
+Wide tables are reshaped to long and the app says so (e.g. "Reshaped from
+wide: 3 groups × 52 years").
+
+Effort level is detected too: if effort is identical for all species within
+each fleet-year (or for all groups within each year), it is treated as a
+shared fleet quantity; otherwise each group keeps its own effort. The choice
+is shown under Effort semantics and can be overridden.
 
 Example datasets are included in the package (`inst/demo_data/`):
 - Thai Main Groups: 3 groups, 1971-2024
